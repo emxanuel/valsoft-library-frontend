@@ -57,15 +57,17 @@ export function LoginForm() {
         : null
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>
-          Use the email and password for your library account.
+    <Card className="border-border/70 bg-card/95 w-full rounded-2xl shadow-xl shadow-primary/[0.06] backdrop-blur-sm">
+      <CardHeader className="space-y-1 pb-2">
+        <CardTitle className="font-heading text-2xl font-semibold tracking-tight">
+          Sign in
+        </CardTitle>
+        <CardDescription className="text-base leading-relaxed">
+          Enter the email and password for your library account.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-2">
           {submitError ? (
             <Alert variant="destructive">
               <AlertDescription>{submitError}</AlertDescription>
@@ -82,6 +84,7 @@ export function LoginForm() {
                 setValues((v) => ({ ...v, email: e.target.value }))
               }
               aria-invalid={!!fieldErrors.email}
+              className="h-11"
             />
             {fieldErrors.email ? (
               <p className="text-destructive text-sm">{fieldErrors.email}</p>
@@ -98,6 +101,7 @@ export function LoginForm() {
                 setValues((v) => ({ ...v, password: e.target.value }))
               }
               aria-invalid={!!fieldErrors.password}
+              className="h-11"
             />
             {fieldErrors.password ? (
               <p className="text-destructive text-sm">
@@ -106,13 +110,21 @@ export function LoginForm() {
             ) : null}
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4 sm:flex-row sm:justify-between">
-          <Button type="submit" disabled={login.isPending}>
+        <CardFooter className="flex flex-col gap-4 pt-2">
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={login.isPending}
+          >
             {login.isPending ? "Signing in…" : "Sign in"}
           </Button>
-          <Button variant="link" className="px-0" asChild>
-            <Link to="/register">Create an account</Link>
-          </Button>
+          <p className="text-muted-foreground text-center text-sm">
+            No account yet?{" "}
+            <Button variant="link" className="h-auto p-0" asChild>
+              <Link to="/register">Create one</Link>
+            </Button>
+          </p>
         </CardFooter>
       </form>
     </Card>

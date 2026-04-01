@@ -67,13 +67,18 @@ export function RegisterForm() {
         : null
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Create account</CardTitle>
-        <CardDescription>Register to borrow and manage books.</CardDescription>
+    <Card className="border-border/70 bg-card/95 w-full rounded-2xl shadow-xl shadow-primary/[0.06] backdrop-blur-sm">
+      <CardHeader className="space-y-1 pb-2">
+        <CardTitle className="font-heading text-2xl font-semibold tracking-tight">
+          Create account
+        </CardTitle>
+        <CardDescription className="text-base leading-relaxed">
+          Register library staff access to run the catalog and circulation from
+          one place.
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-2">
           {submitError ? (
             <Alert variant="destructive">
               <AlertDescription>{submitError}</AlertDescription>
@@ -90,6 +95,7 @@ export function RegisterForm() {
                   setValues((v) => ({ ...v, first_name: e.target.value }))
                 }
                 aria-invalid={!!fieldErrors.first_name}
+                className="h-11"
               />
               {fieldErrors.first_name ? (
                 <p className="text-destructive text-sm">
@@ -107,6 +113,7 @@ export function RegisterForm() {
                   setValues((v) => ({ ...v, last_name: e.target.value }))
                 }
                 aria-invalid={!!fieldErrors.last_name}
+                className="h-11"
               />
               {fieldErrors.last_name ? (
                 <p className="text-destructive text-sm">
@@ -126,6 +133,7 @@ export function RegisterForm() {
                 setValues((v) => ({ ...v, email: e.target.value }))
               }
               aria-invalid={!!fieldErrors.email}
+              className="h-11"
             />
             {fieldErrors.email ? (
               <p className="text-destructive text-sm">{fieldErrors.email}</p>
@@ -142,6 +150,7 @@ export function RegisterForm() {
                 setValues((v) => ({ ...v, password: e.target.value }))
               }
               aria-invalid={!!fieldErrors.password}
+              className="h-11"
             />
             {fieldErrors.password ? (
               <p className="text-destructive text-sm">
@@ -150,13 +159,21 @@ export function RegisterForm() {
             ) : null}
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4 sm:flex-row sm:justify-between">
-          <Button type="submit" disabled={register.isPending}>
-            {register.isPending ? "Creating account…" : "Register"}
+        <CardFooter className="flex flex-col gap-4 pt-2">
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={register.isPending}
+          >
+            {register.isPending ? "Creating account…" : "Create account"}
           </Button>
-          <Button variant="link" className="px-0" asChild>
-            <Link to="/login">Already have an account? Sign in</Link>
-          </Button>
+          <p className="text-muted-foreground text-center text-sm">
+            Already registered?{" "}
+            <Button variant="link" className="h-auto p-0" asChild>
+              <Link to="/login">Sign in</Link>
+            </Button>
+          </p>
         </CardFooter>
       </form>
     </Card>

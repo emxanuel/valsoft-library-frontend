@@ -1,7 +1,19 @@
 import { Navigate } from "react-router"
 
 import { LoginForm } from "@/features/auth/components/login-form"
+import { AuthPageShell } from "@/features/auth/components/auth-page-shell"
 import { useMeQuery } from "@/features/auth/hooks/use-auth-queries"
+import { APP_NAME } from "@/features/shared/constants/branding"
+import { useDocumentTitle } from "@/features/shared/hooks/use-document-title"
+
+function LoginPageContent() {
+  useDocumentTitle(`Sign in | ${APP_NAME}`)
+  return (
+    <AuthPageShell lead="Welcome back. Sign in to continue.">
+      <LoginForm />
+    </AuthPageShell>
+  )
+}
 
 export function LoginPage() {
   const me = useMeQuery(true)
@@ -18,9 +30,5 @@ export function LoginPage() {
     return <Navigate to="/library" replace />
   }
 
-  return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-8 px-4 py-12">
-      <LoginForm />
-    </div>
-  )
+  return <LoginPageContent />
 }

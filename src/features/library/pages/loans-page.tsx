@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/features/shared/components/ui/table"
+import { PageHeader } from "@/features/shared/components/page-header"
 import { getApiErrorMessage } from "@/features/shared/lib/api-error"
 import { LoanCheckInButton } from "@/features/library/components/loan-check-in-button"
 import { formatLoanDate } from "@/features/library/lib/format-loan-date"
@@ -50,13 +51,10 @@ export function LoansPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">My loans</h1>
-        <p className="text-muted-foreground text-sm">
-          Books you currently have checked out. Return them from here or from
-          the book page.
-        </p>
-      </div>
+      <PageHeader
+        title="Open loans"
+        description="Checkouts recorded for your staff sign-in. Process returns here or from the book page."
+      />
 
       {loansQuery.isPending ? (
         <div className="grid gap-4 sm:grid-cols-3">
@@ -80,7 +78,7 @@ export function LoansPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-muted-foreground text-sm">
-              Active checkouts on your account.
+              Total active checkouts.
             </CardContent>
           </Card>
           <Card>
@@ -142,7 +140,7 @@ export function LoansPage() {
                 {loans.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-muted-foreground">
-                      You have no open loans.
+                      No open loans.
                     </TableCell>
                   </TableRow>
                 ) : (

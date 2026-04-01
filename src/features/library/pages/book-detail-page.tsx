@@ -24,6 +24,8 @@ import { Input } from "@/features/shared/components/ui/input"
 import { Label } from "@/features/shared/components/ui/label"
 import { Skeleton } from "@/features/shared/components/ui/skeleton"
 import { Textarea } from "@/features/shared/components/ui/textarea"
+import { APP_NAME } from "@/features/shared/constants/branding"
+import { useDocumentTitle } from "@/features/shared/hooks/use-document-title"
 import { getApiErrorMessage } from "@/features/shared/lib/api-error"
 import {
   bookUpdateSchema,
@@ -73,6 +75,16 @@ export function BookDetailPage() {
       genre: b.genre ?? "",
     }
   }, [bookQuery.data])
+
+  const documentTitle = useMemo(() => {
+    if (!bookId || !Number.isFinite(id) || id < 1) return APP_NAME
+    if (bookQuery.isPending) return `Book | ${APP_NAME}`
+    if (bookQuery.isError) return `Book | ${APP_NAME}`
+    if (bookQuery.data) return `${bookQuery.data.title} | ${APP_NAME}`
+    return APP_NAME
+  }, [bookId, id, bookQuery.isPending, bookQuery.isError, bookQuery.data])
+
+  useDocumentTitle(documentTitle)
 
   if (!bookId || !Number.isFinite(id) || id < 1) {
     return (
@@ -126,7 +138,9 @@ export function BookDetailPage() {
               Books
             </Link>
           </Button>
-          <h1 className="text-2xl font-semibold tracking-tight">{book.title}</h1>
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">
+            {book.title}
+          </h1>
           <p className="text-muted-foreground">
             {book.author}
             {book.genre ? ` · ${book.genre}` : ""}
@@ -170,9 +184,7 @@ export function BookDetailPage() {
             <p className="text-muted-foreground text-sm">Status</p>
             <p>
               {book.is_checked_out ? (
-                <span className="text-amber-600 dark:text-amber-400">
-                  Checked out
-                </span>
+                <span className="text-status-on-loan">Checked out</span>
               ) : (
                 <span className="text-muted-foreground">Available</span>
               )}

@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/features/shared/components/ui/table"
+import { PageHeader } from "@/features/shared/components/page-header"
 import { getApiErrorMessage } from "@/features/shared/lib/api-error"
 import { LoanCheckInButton } from "@/features/library/components/loan-check-in-button"
 import { formatLoanDate } from "@/features/library/lib/format-loan-date"
@@ -39,17 +40,14 @@ export function LibraryHomePage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Library</h1>
-        <p className="text-muted-foreground text-sm">
-          Overview of your catalog and current loans. Open the full lists to
-          search, filter, and manage circulation.
-        </p>
-      </div>
+      <PageHeader
+        title="Library"
+        description="Overview of your catalog and current loans. Open the full lists to search, filter, and manage circulation."
+      />
 
       <section className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-medium">Books</h2>
+          <h2 className="font-heading text-lg font-medium">Books</h2>
           <Button variant="outline" size="sm" asChild>
             <Link to="/library/books">View all books</Link>
           </Button>
@@ -112,7 +110,7 @@ export function LibraryHomePage() {
                         <TableCell>{b.genre ?? "—"}</TableCell>
                         <TableCell className="text-right">
                           {b.is_checked_out ? (
-                            <span className="text-amber-600 dark:text-amber-400">
+                            <span className="text-status-on-loan">
                               Checked out
                             </span>
                           ) : (
@@ -133,7 +131,7 @@ export function LibraryHomePage() {
 
       <section className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-medium">My loans</h2>
+          <h2 className="font-heading text-lg font-medium">Open loans</h2>
           <Button variant="outline" size="sm" asChild>
             <Link to="/library/loans">View all loans</Link>
           </Button>
@@ -157,7 +155,7 @@ export function LibraryHomePage() {
                 Up to {PREVIEW_LIMIT} most recent checkouts.{" "}
                 {totalLoans > 0
                   ? `${totalLoans} open loan${totalLoans === 1 ? "" : "s"} total.`
-                  : "You have nothing checked out."}
+                  : "Nothing checked out for this sign-in."}
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
@@ -178,7 +176,7 @@ export function LibraryHomePage() {
                         colSpan={5}
                         className="text-muted-foreground"
                       >
-                        You have no open loans.
+                        No open loans.
                       </TableCell>
                     </TableRow>
                   ) : (

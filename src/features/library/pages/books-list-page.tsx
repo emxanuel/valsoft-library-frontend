@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/features/shared/components/ui/table"
+import { PageHeader } from "@/features/shared/components/page-header"
 import { getApiErrorMessage } from "@/features/shared/lib/api-error"
 import { CreateBookDialog } from "@/features/library/components/create-book-dialog"
 import { LibrarySearchFilters } from "@/features/library/components/library-search-filters"
@@ -35,13 +36,11 @@ export function BooksListPage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Books</h1>
-          <p className="text-muted-foreground text-sm">
-            Search the catalog, add titles, open a book for details and
-            circulation.
-          </p>
-        </div>
+        <PageHeader
+          title="Books"
+          description="Search the catalog, add titles, open a book for details and circulation."
+          className="sm:flex-1"
+        />
         <CreateBookDialog />
       </div>
 
@@ -98,7 +97,7 @@ export function BooksListPage() {
                       <TableCell>{b.genre ?? "—"}</TableCell>
                       <TableCell className="text-right">
                         {b.is_checked_out ? (
-                          <span className="text-amber-600 dark:text-amber-400">
+                          <span className="text-status-on-loan">
                             Checked out
                           </span>
                         ) : (
