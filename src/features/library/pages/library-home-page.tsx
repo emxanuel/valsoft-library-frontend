@@ -30,12 +30,12 @@ import {
 const PREVIEW_LIMIT = 3
 
 export function LibraryHomePage() {
-  const booksQuery = useBooksQuery(undefined)
+  const booksQuery = useBooksQuery({ limit: PREVIEW_LIMIT, offset: 0 })
   const loansQuery = useMyLoansQuery()
 
-  const previewBooks = booksQuery.data?.slice(0, PREVIEW_LIMIT) ?? []
+  const previewBooks = booksQuery.data?.items ?? []
   const previewLoans = loansQuery.data?.slice(0, PREVIEW_LIMIT) ?? []
-  const totalBooks = booksQuery.data?.length ?? 0
+  const totalBooks = booksQuery.data?.total ?? 0
   const totalLoans = loansQuery.data?.length ?? 0
 
   return (
@@ -164,6 +164,7 @@ export function LibraryHomePage() {
                   <TableRow>
                     <TableHead>Title</TableHead>
                     <TableHead>Author</TableHead>
+                    <TableHead>Client</TableHead>
                     <TableHead>Checked out</TableHead>
                     <TableHead>Due</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -173,7 +174,7 @@ export function LibraryHomePage() {
                   {previewLoans.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={5}
+                        colSpan={6}
                         className="text-muted-foreground"
                       >
                         No open loans.
@@ -191,6 +192,16 @@ export function LibraryHomePage() {
                           </Link>
                         </TableCell>
                         <TableCell>{loan.book_author}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-0.5">
+                            <span>{loan.client_name ?? "—"}</span>
+                            {loan.client_email ? (
+                              <span className="text-muted-foreground text-xs">
+                                {loan.client_email}
+                              </span>
+                            ) : null}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           {formatLoanDate(loan.checked_out_at)}
                         </TableCell>

@@ -1,5 +1,6 @@
 import axios from "axios"
-import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router"
 
 import { Alert, AlertDescription } from "@/features/shared/components/ui/alert"
@@ -23,47 +24,32 @@ import { useRegisterMutation } from "@/features/auth/hooks/use-auth-queries"
 
 export function RegisterForm() {
   const navigate = useNavigate()
-  const register = useRegisterMutation()
-  const [values, setValues] = useState<RegisterFormValues>({
-    first_name: "",
-    last_name: "",
-    email: "",
-    password: "",
+  const registerMutation = useRegisterMutation()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      email: "",
+      password: "",
+    },
   })
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof RegisterFormValues, string>>
-  >({})
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setFieldErrors({})
-    const parsed = registerSchema.safeParse(values)
-    if (!parsed.success) {
-      const next: Partial<Record<keyof RegisterFormValues, string>> = {}
-      for (const issue of parsed.error.issues) {
-        const key = issue.path[0]
-        if (
-          key === "first_name" ||
-          key === "last_name" ||
-          key === "email" ||
-          key === "password"
-        ) {
-          next[key] = issue.message
-        }
-      }
-      setFieldErrors(next)
-      return
-    }
-    register.mutate(parsed.data, {
+  function onValid(data: RegisterFormValues) {
+    registerMutation.mutate(data, {
       onSuccess: () => navigate("/login", { replace: true }),
     })
   }
 
   const submitError =
-    register.isError && axios.isAxiosError(register.error)
-      ? getApiErrorMessage(register.error, "Registration failed")
-      : register.isError
-        ? getApiErrorMessage(register.error)
+    registerMutation.isError && axios.isAxiosError(registerMutation.error)
+      ? getApiErrorMessage(registerMutation.error, "Registration failed")
+      : registerMutation.isError
+        ? getApiErrorMessage(registerMutation.error)
         : null
 
   return (
@@ -77,7 +63,7 @@ export function RegisterForm() {
           one place.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onValid)} noValidate>
         <CardContent className="space-y-4 pt-2">
           {submitError ? (
             <Alert variant="destructive">
@@ -90,16 +76,13 @@ export function RegisterForm() {
               <Input
                 id="first_name"
                 autoComplete="given-name"
-                value={values.first_name}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, first_name: e.target.value }))
-                }
-                aria-invalid={!!fieldErrors.first_name}
+                aria-invalid={!!errors.first_name}
                 className="h-11"
+                {...register("first_name")}
               />
-              {fieldErrors.first_name ? (
+              {errors.first_name ? (
                 <p className="text-destructive text-sm">
-                  {fieldErrors.first_name}
+                  {errors.first_name.message}
                 </p>
               ) : null}
             </div>
@@ -108,16 +91,13 @@ export function RegisterForm() {
               <Input
                 id="last_name"
                 autoComplete="family-name"
-                value={values.last_name}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, last_name: e.target.value }))
-                }
-                aria-invalid={!!fieldErrors.last_name}
+                aria-invalid={!!errors.last_name}
                 className="h-11"
+                {...register("last_name")}
               />
-              {fieldErrors.last_name ? (
+              {errors.last_name ? (
                 <p className="text-destructive text-sm">
-                  {fieldErrors.last_name}
+                  {errors.last_name.message}
                 </p>
               ) : null}
             </div>
@@ -128,15 +108,12 @@ export function RegisterForm() {
               id="email"
               type="email"
               autoComplete="email"
-              value={values.email}
-              onChange={(e) =>
-                setValues((v) => ({ ...v, email: e.target.value }))
-              }
-              aria-invalid={!!fieldErrors.email}
+              aria-invalid={!!errors.email}
               className="h-11"
+              {...register("email")}
             />
-            {fieldErrors.email ? (
-              <p className="text-destructive text-sm">{fieldErrors.email}</p>
+            {errors.email ? (
+              <p className="text-destructive text-sm">{errors.email.message}</p>
             ) : null}
           </div>
           <div className="space-y-2">
@@ -145,16 +122,13 @@ export function RegisterForm() {
               id="password"
               type="password"
               autoComplete="new-password"
-              value={values.password}
-              onChange={(e) =>
-                setValues((v) => ({ ...v, password: e.target.value }))
-              }
-              aria-invalid={!!fieldErrors.password}
+              aria-invalid={!!errors.password}
               className="h-11"
+              {...register("password")}
             />
-            {fieldErrors.password ? (
+            {errors.password ? (
               <p className="text-destructive text-sm">
-                {fieldErrors.password}
+                {errors.password.message}
               </p>
             ) : null}
           </div>
@@ -164,9 +138,9 @@ export function RegisterForm() {
             type="submit"
             size="lg"
             className="w-full"
-            disabled={register.isPending}
+            disabled={registerMutation.isPending}
           >
-            {register.isPending ? "Creating account…" : "Create account"}
+            {registerMutation.isPending ? "Creating account…" : "Create account"}
           </Button>
           <p className="text-muted-foreground text-center text-sm">
             Already registered?{" "}

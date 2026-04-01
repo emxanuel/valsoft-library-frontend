@@ -26,6 +26,7 @@ function documentTitleForAppPath(pathname: string): string {
   if (pathname === "/library") return `Overview | ${APP_NAME}`
   if (pathname === "/library/books") return `Books | ${APP_NAME}`
   if (pathname === "/library/loans") return `Open loans | ${APP_NAME}`
+  if (pathname === "/library/clients") return `Clients | ${APP_NAME}`
   if (/^\/library\/books\/[^/]+$/.test(pathname)) return `Book | ${APP_NAME}`
   return APP_NAME
 }
@@ -34,6 +35,7 @@ const navItems = [
   { to: "/library", label: "Overview", end: true },
   { to: "/library/books", label: "Books", end: false },
   { to: "/library/loans", label: "Loans", end: false },
+  { to: "/library/clients", label: "Clients", end: false },
 ] as const
 
 function navLinkClassName({
@@ -127,7 +129,7 @@ export function AppLayout() {
   }, [location.pathname])
 
   return (
-    <div className="bg-background flex min-h-svh flex-col lg:flex-row">
+    <div className="bg-background flex min-h-svh flex-col lg:h-svh lg:max-h-svh lg:flex-row lg:overflow-hidden">
       <header className="border-sidebar-border bg-background/95 supports-backdrop-filter:bg-background/80 sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b px-4 backdrop-blur lg:hidden">
         <Link
           to="/library"
@@ -184,7 +186,7 @@ export function AppLayout() {
         </>
       ) : null}
 
-      <aside className="border-sidebar-border bg-sidebar text-sidebar-foreground hidden w-64 shrink-0 flex-col border-r lg:flex">
+      <aside className="border-sidebar-border bg-sidebar text-sidebar-foreground hidden h-auto w-64 shrink-0 flex-col border-r lg:flex lg:h-full lg:max-h-none lg:overflow-y-auto">
         <div className="border-sidebar-border flex flex-col gap-1 border-b px-5 py-8">
           <Link
             to="/library"
@@ -204,7 +206,7 @@ export function AppLayout() {
         </div>
       </aside>
 
-      <main className="flex min-h-0 flex-1 flex-col">
+      <main className="flex min-h-0 flex-1 flex-col lg:min-h-0 lg:overflow-y-auto">
         <div className="mx-auto w-full max-w-4xl flex-1 px-5 py-8 lg:mr-auto lg:ml-0 lg:max-w-4xl lg:pl-10 lg:pr-12">
           <Outlet />
         </div>

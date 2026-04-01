@@ -1,5 +1,7 @@
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { type Resolver, Controller, useForm } from "react-hook-form"
 
 import { Alert, AlertDescription } from "@/features/shared/components/ui/alert"
 import { Button } from "@/features/shared/components/ui/button"
@@ -22,56 +24,50 @@ import {
 } from "@/features/library/schemas"
 import { useCreateBookMutation } from "@/features/library/hooks/use-library-queries"
 
+const emptyValues: BookCreateFormValues = {
+  title: "",
+  author: "",
+  isbn: "",
+  description: "",
+  published_year: undefined,
+  genre: "",
+  image_url: "",
+}
+
 export function CreateBookDialog() {
   const [open, setOpen] = useState(false)
   const create = useCreateBookMutation()
-  const [values, setValues] = useState<BookCreateFormValues>({
-    title: "",
-    author: "",
-    isbn: "",
-    description: "",
-    published_year: undefined,
-    genre: "",
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<BookCreateFormValues>({
+    resolver: zodResolver(bookCreateSchema) as Resolver<BookCreateFormValues>,
+    defaultValues: emptyValues,
   })
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof BookCreateFormValues, string>>
-  >({})
+
+  useEffect(() => {
+    if (open) {
+      reset(emptyValues)
+    }
+  }, [open, reset])
 
   function resetAndClose() {
-    setValues({
-      title: "",
-      author: "",
-      isbn: "",
-      description: "",
-      published_year: undefined,
-      genre: "",
-    })
-    setFieldErrors({})
+    reset(emptyValues)
     setOpen(false)
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setFieldErrors({})
-    const parsed = bookCreateSchema.safeParse(values)
-    if (!parsed.success) {
-      const next: Partial<Record<keyof BookCreateFormValues, string>> = {}
-      for (const issue of parsed.error.issues) {
-        const key = issue.path[0]
-        if (typeof key === "string") {
-          next[key as keyof BookCreateFormValues] = issue.message
-        }
-      }
-      setFieldErrors(next)
-      return
-    }
+  function onValid(data: BookCreateFormValues) {
     const payload = {
-      title: parsed.data.title,
-      author: parsed.data.author,
-      isbn: parsed.data.isbn?.trim() || undefined,
-      description: parsed.data.description?.trim() || undefined,
-      published_year: parsed.data.published_year ?? undefined,
-      genre: parsed.data.genre?.trim() || undefined,
+      title: data.title,
+      author: data.author,
+      isbn: data.isbn?.trim() || undefined,
+      description: data.description?.trim() || undefined,
+      published_year: data.published_year ?? undefined,
+      genre: data.genre?.trim() || undefined,
+      image_url: data.image_url?.trim() || undefined,
     }
     create.mutate(payload, { onSuccess: () => resetAndClose() })
   }
@@ -85,7 +81,7 @@ export function CreateBookDialog() {
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onValid)} noValidate>
           <DialogHeader>
             <DialogTitle>Add book</DialogTitle>
             <DialogDescription>
@@ -105,81 +101,74 @@ export function CreateBookDialog() {
               <Label htmlFor="create-title">Title</Label>
               <Input
                 id="create-title"
-                value={values.title}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, title: e.target.value }))
-                }
-                aria-invalid={!!fieldErrors.title}
+                aria-invalid={!!errors.title}
+                {...register("title")}
               />
-              {fieldErrors.title ? (
-                <p className="text-destructive text-sm">{fieldErrors.title}</p>
+              {errors.title ? (
+                <p className="text-destructive text-sm">{errors.title.message}</p>
               ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="create-author">Author</Label>
               <Input
                 id="create-author"
-                value={values.author}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, author: e.target.value }))
-                }
-                aria-invalid={!!fieldErrors.author}
+                aria-invalid={!!errors.author}
+                {...register("author")}
               />
-              {fieldErrors.author ? (
+              {errors.author ? (
                 <p className="text-destructive text-sm">
-                  {fieldErrors.author}
+                  {errors.author.message}
                 </p>
               ) : null}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="create-isbn">ISBN</Label>
-                <Input
-                  id="create-isbn"
-                  value={values.isbn ?? ""}
-                  onChange={(e) =>
-                    setValues((v) => ({ ...v, isbn: e.target.value }))
-                  }
-                />
+                <Input id="create-isbn" {...register("isbn")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="create-year">Published year</Label>
-                <Input
-                  id="create-year"
-                  type="number"
-                  value={values.published_year ?? ""}
-                  onChange={(e) =>
-                    setValues((v) => ({
-                      ...v,
-                      published_year:
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value),
-                    }))
-                  }
+                <Controller
+                  name="published_year"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="create-year"
+                      type="number"
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const v = e.target.value
+                        field.onChange(v === "" ? undefined : Number(v))
+                      }}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                    />
+                  )}
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="create-genre">Genre</Label>
+              <Input id="create-genre" {...register("genre")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-image-url">Cover image URL</Label>
               <Input
-                id="create-genre"
-                value={values.genre ?? ""}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, genre: e.target.value }))
-                }
+                id="create-image-url"
+                type="url"
+                placeholder="https://…"
+                aria-invalid={!!errors.image_url}
+                {...register("image_url")}
               />
+              {errors.image_url ? (
+                <p className="text-destructive text-sm">
+                  {errors.image_url.message}
+                </p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="create-desc">Description</Label>
-              <Textarea
-                id="create-desc"
-                rows={3}
-                value={values.description ?? ""}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, description: e.target.value }))
-                }
-              />
+              <Textarea id="create-desc" rows={3} {...register("description")} />
             </div>
           </div>
           <DialogFooter>

@@ -1,5 +1,6 @@
 import axios from "axios"
-import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router"
 
 import { Alert, AlertDescription } from "@/features/shared/components/ui/alert"
@@ -21,30 +22,17 @@ import { useLoginMutation } from "@/features/auth/hooks/use-auth-queries"
 export function LoginForm() {
   const navigate = useNavigate()
   const login = useLoginMutation()
-  const [values, setValues] = useState<LoginFormValues>({
-    email: "",
-    password: "",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
   })
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof LoginFormValues, string>>
-  >({})
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setFieldErrors({})
-    const parsed = loginSchema.safeParse(values)
-    if (!parsed.success) {
-      const next: Partial<Record<keyof LoginFormValues, string>> = {}
-      for (const issue of parsed.error.issues) {
-        const key = issue.path[0]
-        if (key === "email" || key === "password") {
-          next[key] = issue.message
-        }
-      }
-      setFieldErrors(next)
-      return
-    }
-    login.mutate(parsed.data, {
+  function onValid(data: LoginFormValues) {
+    login.mutate(data, {
       onSuccess: () => navigate("/library", { replace: true }),
     })
   }
@@ -66,7 +54,7 @@ export function LoginForm() {
           Enter the email and password for your library account.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onValid)} noValidate>
         <CardContent className="space-y-4 pt-2">
           {submitError ? (
             <Alert variant="destructive">
@@ -79,15 +67,12 @@ export function LoginForm() {
               id="email"
               type="email"
               autoComplete="email"
-              value={values.email}
-              onChange={(e) =>
-                setValues((v) => ({ ...v, email: e.target.value }))
-              }
-              aria-invalid={!!fieldErrors.email}
+              aria-invalid={!!errors.email}
               className="h-11"
+              {...register("email")}
             />
-            {fieldErrors.email ? (
-              <p className="text-destructive text-sm">{fieldErrors.email}</p>
+            {errors.email ? (
+              <p className="text-destructive text-sm">{errors.email.message}</p>
             ) : null}
           </div>
           <div className="space-y-2">
@@ -96,16 +81,13 @@ export function LoginForm() {
               id="password"
               type="password"
               autoComplete="current-password"
-              value={values.password}
-              onChange={(e) =>
-                setValues((v) => ({ ...v, password: e.target.value }))
-              }
-              aria-invalid={!!fieldErrors.password}
+              aria-invalid={!!errors.password}
               className="h-11"
+              {...register("password")}
             />
-            {fieldErrors.password ? (
+            {errors.password ? (
               <p className="text-destructive text-sm">
-                {fieldErrors.password}
+                {errors.password.message}
               </p>
             ) : null}
           </div>

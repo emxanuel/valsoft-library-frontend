@@ -4,15 +4,19 @@ import { libraryKeys } from "@/features/library/query-keys"
 import * as libraryRequests from "@/features/library/services/requests"
 import type {
   BookCreate,
+  BookListPage,
   BookUpdate,
   CheckoutRequest,
+  ClientListPage,
   ListBooksParams,
+  ListClientsParams,
 } from "@/features/library/services/types"
 
 export function useBooksQuery(params?: ListBooksParams) {
-  return useQuery({
+  return useQuery<BookListPage>({
     queryKey: libraryKeys.books(params),
     queryFn: () => libraryRequests.listBooks(params),
+    staleTime: 0,
   })
 }
 
@@ -20,6 +24,14 @@ export function useMyLoansQuery() {
   return useQuery({
     queryKey: libraryKeys.loans(),
     queryFn: () => libraryRequests.listMyOpenLoans(),
+  })
+}
+
+export function useClientsQuery(params?: ListClientsParams) {
+  return useQuery<ClientListPage>({
+    queryKey: libraryKeys.clients(params),
+    queryFn: () => libraryRequests.listClients(params),
+    staleTime: 0,
   })
 }
 
@@ -74,6 +86,7 @@ export function useCheckoutMutation(bookId: number) {
         queryKey: libraryKeys.book(bookId),
       })
       void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+      void queryClient.invalidateQueries({ queryKey: ["library", "clients"] })
     },
   })
 }

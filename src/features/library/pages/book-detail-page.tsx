@@ -1,6 +1,8 @@
+import { zodResolver } from "@hookform/resolvers/zod"
 import axios from "axios"
 import { ArrowLeft, Trash2 } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { type Resolver, Controller, useForm } from "react-hook-form"
 import { Link, useNavigate, useParams } from "react-router"
 
 import { Alert, AlertDescription } from "@/features/shared/components/ui/alert"
@@ -73,6 +75,7 @@ export function BookDetailPage() {
       description: b.description ?? "",
       published_year: b.published_year ?? undefined,
       genre: b.genre ?? "",
+      image_url: b.image_url ?? "",
     }
   }, [bookQuery.data])
 
@@ -131,20 +134,27 @@ export function BookDetailPage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <Button variant="ghost" size="sm" className="w-fit gap-2 px-0" asChild>
-            <Link to="/library/books">
-              <ArrowLeft className="size-4" />
-              Books
-            </Link>
-          </Button>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            {book.title}
-          </h1>
-          <p className="text-muted-foreground">
-            {book.author}
-            {book.genre ? ` · ${book.genre}` : ""}
-          </p>
+        <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-start">
+          <BookCover
+            url={book.image_url}
+            title={book.title}
+            className="h-40 w-28 shrink-0 sm:h-48 sm:w-32"
+          />
+          <div className="min-w-0 space-y-2">
+            <Button variant="ghost" size="sm" className="w-fit gap-2 px-0" asChild>
+              <Link to="/library/books">
+                <ArrowLeft className="size-4" />
+                Books
+              </Link>
+            </Button>
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              {book.title}
+            </h1>
+            <p className="text-muted-foreground">
+              {book.author}
+              {book.genre ? ` · ${book.genre}` : ""}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setEditOpen(true)}>
@@ -226,6 +236,35 @@ export function BookDetailPage() {
   )
 }
 
+function BookCover({
+  url,
+  title,
+  className,
+}: {
+  url: string | null
+  title: string
+  className?: string
+}) {
+  const [failed, setFailed] = useState(false)
+  if (!url || failed) {
+    return (
+      <div
+        className={`bg-muted shrink-0 rounded-md border border-dashed ${className ?? ""}`}
+        aria-hidden
+      />
+    )
+  }
+  return (
+    <img
+      src={url}
+      alt={`Cover: ${title}`}
+      className={`shrink-0 rounded-md object-cover shadow-sm ${className ?? ""}`}
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
 function CheckinButton({ bookId }: { bookId: number }) {
   const checkin = useCheckinMutation(bookId)
   return (
@@ -251,49 +290,40 @@ function EditBookDialog({
   initial: BookUpdateFormValues & { title: string; author: string }
 }) {
   const update = useUpdateBookMutation(bookId)
-  const [values, setValues] = useState(initial)
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof BookUpdateFormValues, string>>
-  >({})
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<BookUpdateFormValues>({
+    resolver: zodResolver(bookUpdateSchema) as Resolver<BookUpdateFormValues>,
+    defaultValues: initial,
+  })
 
-  function handleOpenChange(next: boolean) {
-    if (next) {
-      setValues(initial)
-      setFieldErrors({})
+  useEffect(() => {
+    if (open) {
+      reset(initial)
     }
-    onOpenChange(next)
-  }
+  }, [open, initial, reset])
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setFieldErrors({})
-    const parsed = bookUpdateSchema.safeParse(values)
-    if (!parsed.success) {
-      const next: Partial<Record<keyof BookUpdateFormValues, string>> = {}
-      for (const issue of parsed.error.issues) {
-        const key = issue.path[0]
-        if (typeof key === "string") {
-          next[key as keyof BookUpdateFormValues] = issue.message
-        }
-      }
-      setFieldErrors(next)
-      return
-    }
+  function onValid(data: BookUpdateFormValues) {
     const payload = {
-      title: parsed.data.title,
-      author: parsed.data.author,
-      isbn: parsed.data.isbn?.trim() || undefined,
-      description: parsed.data.description?.trim() || undefined,
-      published_year: parsed.data.published_year ?? undefined,
-      genre: parsed.data.genre?.trim() || undefined,
+      title: data.title,
+      author: data.author,
+      isbn: data.isbn?.trim() || undefined,
+      description: data.description?.trim() || undefined,
+      published_year: data.published_year ?? undefined,
+      genre: data.genre?.trim() || undefined,
+      image_url: data.image_url?.trim() || undefined,
     }
-    update.mutate(payload, { onSuccess: () => handleOpenChange(false) })
+    update.mutate(payload, { onSuccess: () => onOpenChange(false) })
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onValid)} noValidate>
           <DialogHeader>
             <DialogTitle>Edit book</DialogTitle>
             <DialogDescription>Update catalog fields.</DialogDescription>
@@ -310,84 +340,79 @@ function EditBookDialog({
               <Label htmlFor="edit-title">Title</Label>
               <Input
                 id="edit-title"
-                value={values.title ?? ""}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, title: e.target.value }))
-                }
+                aria-invalid={!!errors.title}
+                {...register("title")}
               />
-              {fieldErrors.title ? (
-                <p className="text-destructive text-sm">{fieldErrors.title}</p>
+              {errors.title ? (
+                <p className="text-destructive text-sm">{errors.title.message}</p>
               ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-author">Author</Label>
               <Input
                 id="edit-author"
-                value={values.author ?? ""}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, author: e.target.value }))
-                }
+                aria-invalid={!!errors.author}
+                {...register("author")}
               />
-              {fieldErrors.author ? (
-                <p className="text-destructive text-sm">{fieldErrors.author}</p>
+              {errors.author ? (
+                <p className="text-destructive text-sm">{errors.author.message}</p>
               ) : null}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="edit-isbn">ISBN</Label>
-                <Input
-                  id="edit-isbn"
-                  value={values.isbn ?? ""}
-                  onChange={(e) =>
-                    setValues((v) => ({ ...v, isbn: e.target.value }))
-                  }
-                />
+                <Input id="edit-isbn" {...register("isbn")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-year">Published year</Label>
-                <Input
-                  id="edit-year"
-                  type="number"
-                  value={values.published_year ?? ""}
-                  onChange={(e) =>
-                    setValues((v) => ({
-                      ...v,
-                      published_year:
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value),
-                    }))
-                  }
+                <Controller
+                  name="published_year"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="edit-year"
+                      type="number"
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const v = e.target.value
+                        field.onChange(v === "" ? undefined : Number(v))
+                      }}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                    />
+                  )}
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-genre">Genre</Label>
+              <Input id="edit-genre" {...register("genre")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-image-url">Cover image URL</Label>
               <Input
-                id="edit-genre"
-                value={values.genre ?? ""}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, genre: e.target.value }))
-                }
+                id="edit-image-url"
+                type="url"
+                placeholder="https://…"
+                aria-invalid={!!errors.image_url}
+                {...register("image_url")}
               />
+              {errors.image_url ? (
+                <p className="text-destructive text-sm">
+                  {errors.image_url.message}
+                </p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-desc">Description</Label>
-              <Textarea
-                id="edit-desc"
-                rows={3}
-                value={values.description ?? ""}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, description: e.target.value }))
-                }
-              />
+              <Textarea id="edit-desc" rows={3} {...register("description")} />
             </div>
           </div>
           <DialogFooter>
             <Button
               type="button"
               variant="outline"
-              onClick={() => handleOpenChange(false)}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
@@ -464,47 +489,56 @@ function CheckoutDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const checkout = useCheckoutMutation(bookId)
-  const [values, setValues] = useState<CheckoutFormValues>({ due_at: "" })
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof CheckoutFormValues, string>>
-  >({})
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      client_name: "",
+      client_email: "",
+      client_phone: "",
+      due_at: "",
+    },
+  })
 
-  function handleOpenChange(next: boolean) {
-    if (next) {
-      setValues({ due_at: toDateTimeLocalValue(new Date()) })
-      setFieldErrors({})
+  useEffect(() => {
+    if (open) {
+      reset({
+        client_name: "",
+        client_email: "",
+        client_phone: "",
+        due_at: toDateTimeLocalValue(new Date()),
+      })
     }
-    onOpenChange(next)
-  }
+  }, [open, reset])
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setFieldErrors({})
-    const parsed = checkoutSchema.safeParse(values)
-    if (!parsed.success) {
-      const next: Partial<Record<keyof CheckoutFormValues, string>> = {}
-      for (const issue of parsed.error.issues) {
-        const key = issue.path[0]
-        if (key === "due_at") next.due_at = issue.message
-      }
-      setFieldErrors(next)
-      return
-    }
-    const due = toDueAtIso(parsed.data.due_at ?? "")
+  function onValid(data: CheckoutFormValues) {
+    const due = toDueAtIso(data.due_at ?? "")
+    const phone = data.client_phone?.trim()
     checkout.mutate(
-      { due_at: due },
-      { onSuccess: () => handleOpenChange(false) },
+      {
+        client: {
+          name: data.client_name.trim(),
+          email: data.client_email.trim(),
+          phone: phone ? phone : undefined,
+        },
+        due_at: due,
+      },
+      { onSuccess: () => onOpenChange(false) },
     )
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onValid)} noValidate>
           <DialogHeader>
             <DialogTitle>Check out</DialogTitle>
             <DialogDescription>
-              Optional due date for this loan (local time).
+              Record the borrower and an optional due date (local time).
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -516,17 +550,61 @@ function CheckoutDialog({
               </Alert>
             ) : null}
             <div className="space-y-2">
+              <Label htmlFor="client_name">Borrower name</Label>
+              <Input
+                id="client_name"
+                autoComplete="name"
+                aria-invalid={!!errors.client_name}
+                {...register("client_name")}
+              />
+              {errors.client_name ? (
+                <p className="text-destructive text-sm">
+                  {errors.client_name.message}
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client_email">Email</Label>
+              <Input
+                id="client_email"
+                type="email"
+                autoComplete="email"
+                aria-invalid={!!errors.client_email}
+                {...register("client_email")}
+              />
+              {errors.client_email ? (
+                <p className="text-destructive text-sm">
+                  {errors.client_email.message}
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client_phone">Phone (optional)</Label>
+              <Input
+                id="client_phone"
+                type="tel"
+                autoComplete="tel"
+                aria-invalid={!!errors.client_phone}
+                {...register("client_phone")}
+              />
+              {errors.client_phone ? (
+                <p className="text-destructive text-sm">
+                  {errors.client_phone.message}
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="due_at">Due date</Label>
               <Input
                 id="due_at"
                 type="datetime-local"
-                value={values.due_at ?? ""}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, due_at: e.target.value }))
-                }
+                aria-invalid={!!errors.due_at}
+                {...register("due_at")}
               />
-              {fieldErrors.due_at ? (
-                <p className="text-destructive text-sm">{fieldErrors.due_at}</p>
+              {errors.due_at ? (
+                <p className="text-destructive text-sm">
+                  {errors.due_at.message}
+                </p>
               ) : null}
             </div>
           </div>
@@ -534,7 +612,7 @@ function CheckoutDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => handleOpenChange(false)}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>

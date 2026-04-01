@@ -1,10 +1,13 @@
 import { api } from "@/features/shared/services/client"
 import type {
   BookCreate,
+  BookListPage,
   BookRead,
   BookUpdate,
   CheckoutRequest,
+  ClientListPage,
   ListBooksParams,
+  ListClientsParams,
   LoanRead,
   MyOpenLoanRead,
 } from "./types"
@@ -14,8 +17,17 @@ export async function listMyOpenLoans(): Promise<MyOpenLoanRead[]> {
   return data
 }
 
-export async function listBooks(params?: ListBooksParams): Promise<BookRead[]> {
-  const { data } = await api.get<BookRead[]>("/library/books", { params })
+export async function listBooks(params?: ListBooksParams): Promise<BookListPage> {
+  const { data } = await api.get<BookListPage>("/library/books", { params })
+  return data
+}
+
+export async function listClients(
+  params?: ListClientsParams,
+): Promise<ClientListPage> {
+  const { data } = await api.get<ClientListPage>("/library/clients", {
+    params,
+  })
   return data
 }
 

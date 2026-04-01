@@ -38,7 +38,7 @@ This document helps humans and coding agents work on the **valsoft-library-front
 The UI targets the FastAPI app in **valsoft-library-backend**:
 
 - **Auth** (cookie `session_id`): `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout`
-- **Library** (requires login): `GET/POST /library/books`, `GET/PATCH/DELETE /library/books/{id}`, `POST .../checkout`, `POST .../checkin`
+- **Library** (requires login): `GET /library/books`, `GET /library/loans`, `GET /library/clients` (all paginated or list-shaped as documented in the backend), `POST /library/books`, `GET/PATCH/DELETE /library/books/{id}`, `POST .../checkout` (body includes `client` + optional `due_at`), `POST .../checkin`
 
 See the backend [`AGENTS.md`](../valsoft-library-backend/AGENTS.md) for behavior (soft delete, loans, etc.).
 

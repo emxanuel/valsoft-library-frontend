@@ -131,6 +131,7 @@ export function LoansPage() {
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead>Author</TableHead>
+                  <TableHead>Client</TableHead>
                   <TableHead>Checked out</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -139,7 +140,7 @@ export function LoansPage() {
               <TableBody>
                 {loans.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-muted-foreground">
+                    <TableCell colSpan={6} className="text-muted-foreground">
                       No open loans.
                     </TableCell>
                   </TableRow>
@@ -155,6 +156,16 @@ export function LoansPage() {
                         </Link>
                       </TableCell>
                       <TableCell>{loan.book_author}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-0.5">
+                          <span>{loan.client_name ?? "—"}</span>
+                          {loan.client_email ? (
+                            <span className="text-muted-foreground text-xs">
+                              {loan.client_email}
+                            </span>
+                          ) : null}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         {formatLoanDate(loan.checked_out_at)}
                       </TableCell>

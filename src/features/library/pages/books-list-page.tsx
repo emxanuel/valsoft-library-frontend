@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router"
 
 import { Alert, AlertDescription } from "@/features/shared/components/ui/alert"
@@ -19,19 +19,71 @@ import { CreateBookDialog } from "@/features/library/components/create-book-dial
 import { LibrarySearchFilters } from "@/features/library/components/library-search-filters"
 import { useBooksQuery } from "@/features/library/hooks/use-library-queries"
 
+const DEFAULT_PAGE_SIZE = 20
+
+function parsePositiveInt(raw: string | null, fallback: number): number {
+  const n = Number.parseInt(raw ?? "", 10)
+  return Number.isFinite(n) && n >= 1 ? n : fallback
+}
+
 export function BooksListPage() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const q = searchParams.get("q") ?? undefined
   const genre = searchParams.get("genre") ?? undefined
+  const page = parsePositiveInt(searchParams.get("page"), 1)
+  const limit = Math.min(
+    100,
+    Math.max(1, parsePositiveInt(searchParams.get("limit"), DEFAULT_PAGE_SIZE)),
+  )
+  const offset = (page - 1) * limit
 
   const listParams = useMemo(() => {
-    const p: { q?: string; genre?: string } = {}
+    const p: {
+      q?: string
+      genre?: string
+      offset: number
+      limit: number
+    } = { offset, limit }
     if (q) p.q = q
     if (genre) p.genre = genre
-    return Object.keys(p).length ? p : undefined
-  }, [q, genre])
+    return p
+  }, [q, genre, offset, limit])
 
   const booksQuery = useBooksQuery(listParams)
+
+  const total = booksQuery.data?.total ?? 0
+  const totalPages = total === 0 ? 1 : Math.ceil(total / limit)
+  const items = booksQuery.data?.items ?? []
+
+  useEffect(() => {
+    if (!booksQuery.isSuccess) return
+    const t = booksQuery.data?.total ?? 0
+    if (t === 0) return
+    const maxPage = Math.ceil(t / limit)
+    if (page > maxPage) {
+      setSearchParams((prev) => {
+        const n = new URLSearchParams(prev)
+        if (maxPage <= 1) n.delete("page")
+        else n.set("page", String(maxPage))
+        return n
+      })
+    }
+  }, [booksQuery.isSuccess, booksQuery.data?.total, limit, page, setSearchParams])
+
+  const goToPage = useCallback(
+    (next: number) => {
+      setSearchParams((prev) => {
+        const nextParams = new URLSearchParams(prev)
+        if (next <= 1) {
+          nextParams.delete("page")
+        } else {
+          nextParams.set("page", String(next))
+        }
+        return nextParams
+      })
+    },
+    [setSearchParams],
+  )
 
   return (
     <div className="space-y-8">
@@ -44,11 +96,7 @@ export function BooksListPage() {
         <CreateBookDialog />
       </div>
 
-      <LibrarySearchFilters
-        key={searchParams.toString()}
-        initialQ={q ?? ""}
-        initialGenre={genre ?? ""}
-      />
+      <LibrarySearchFilters />
 
       {booksQuery.isPending ? (
         <div className="space-y-2">
@@ -64,10 +112,11 @@ export function BooksListPage() {
         </Alert>
       ) : (
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="space-y-4 pt-6">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-14">Cover</TableHead>
                   <TableHead>Title</TableHead>
                   <TableHead>Author</TableHead>
                   <TableHead>Genre</TableHead>
@@ -76,15 +125,18 @@ export function BooksListPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {booksQuery.data?.length === 0 ? (
+                {items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-muted-foreground">
+                    <TableCell colSpan={6} className="text-muted-foreground">
                       No books match your filters.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  booksQuery.data?.map((b) => (
+                  items.map((b) => (
                     <TableRow key={b.id}>
+                      <TableCell className="w-14">
+                        <BookRowThumb url={b.image_url} />
+                      </TableCell>
                       <TableCell>
                         <Link
                           to={`/library/books/${b.id}`}
@@ -116,9 +168,55 @@ export function BooksListPage() {
                 )}
               </TableBody>
             </Table>
+            <div className="text-muted-foreground flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                {total === 0
+                  ? "No books in this view."
+                  : `Showing ${items.length} of ${total} book${total === 1 ? "" : "s"}.`}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => goToPage(page - 1)}
+                >
+                  Previous
+                </Button>
+                <span className="tabular-nums">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => goToPage(page + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
     </div>
+  )
+}
+
+function BookRowThumb({ url }: { url: string | null }) {
+  const [failed, setFailed] = useState(false)
+  if (!url || failed) {
+    return <span className="text-muted-foreground">—</span>
+  }
+  return (
+    <img
+      src={url}
+      alt=""
+      className="size-11 rounded-sm object-cover"
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
   )
 }
