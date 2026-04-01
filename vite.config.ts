@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: 3010,
+      port: 3011,
       host: true,
       proxy: {
         "/auth": {
