@@ -42,6 +42,15 @@ export type LoanRead = {
   returned_at: string | null
 }
 
+export type MyOpenLoanRead = {
+  loan_id: number
+  book_id: number
+  book_title: string
+  book_author: string
+  checked_out_at: string
+  due_at: string | null
+}
+
 export type ListBooksParams = {
   q?: string
   genre?: string

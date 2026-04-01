@@ -6,7 +6,13 @@ import type {
   CheckoutRequest,
   ListBooksParams,
   LoanRead,
+  MyOpenLoanRead,
 } from "./types"
+
+export async function listMyOpenLoans(): Promise<MyOpenLoanRead[]> {
+  const { data } = await api.get<MyOpenLoanRead[]>("/library/loans")
+  return data
+}
 
 export async function listBooks(params?: ListBooksParams): Promise<BookRead[]> {
   const { data } = await api.get<BookRead[]>("/library/books", { params })

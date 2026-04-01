@@ -32,7 +32,10 @@ export function AppLayout() {
             <Separator orientation="vertical" className="h-6" />
             <nav className="flex gap-2 text-sm">
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/library">Books</Link>
+                <Link to="/library/books">Books</Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/library/loans">Loans</Link>
               </Button>
             </nav>
           </div>

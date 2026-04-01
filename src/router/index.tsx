@@ -5,7 +5,9 @@ import { ProtectedLayout } from "@/features/auth/pages/protected-layout"
 import { RegisterPage } from "@/features/auth/pages/register-page"
 import { AppLayout } from "@/features/shared/components/app-layout"
 import { BookDetailPage } from "@/features/library/pages/book-detail-page"
-import { LibraryPage } from "@/features/library/pages/library-page"
+import { BooksListPage } from "@/features/library/pages/books-list-page"
+import { LibraryHomePage } from "@/features/library/pages/library-home-page"
+import { LoansPage } from "@/features/library/pages/loans-page"
 
 export const Router = () => {
   return (
@@ -16,7 +18,9 @@ export const Router = () => {
         <Route element={<ProtectedLayout />}>
           <Route element={<AppLayout />}>
             <Route index element={<Navigate to="/library" replace />} />
-            <Route path="library" element={<LibraryPage />} />
+            <Route path="library" element={<LibraryHomePage />} />
+            <Route path="library/books" element={<BooksListPage />} />
+            <Route path="library/loans" element={<LoansPage />} />
             <Route path="library/books/:bookId" element={<BookDetailPage />} />
           </Route>
         </Route>

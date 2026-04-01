@@ -45,6 +45,11 @@ function toDueAtIso(local: string): string | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d.toISOString()
 }
 
+function toDateTimeLocalValue(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export function BookDetailPage() {
   const { bookId } = useParams<{ bookId: string }>()
   const id = Number(bookId)
@@ -74,7 +79,7 @@ export function BookDetailPage() {
       <div className="space-y-4">
         <p className="text-destructive text-sm">Invalid book id.</p>
         <Button variant="outline" asChild>
-          <Link to="/library">Back to books</Link>
+          <Link to="/library/books">Back to books</Link>
         </Button>
       </div>
     )
@@ -103,7 +108,7 @@ export function BookDetailPage() {
           </AlertDescription>
         </Alert>
         <Button variant="outline" asChild>
-          <Link to="/library">Back to books</Link>
+          <Link to="/library/books">Back to books</Link>
         </Button>
       </div>
     )
@@ -116,7 +121,7 @@ export function BookDetailPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <Button variant="ghost" size="sm" className="w-fit gap-2 px-0" asChild>
-            <Link to="/library">
+            <Link to="/library/books">
               <ArrowLeft className="size-4" />
               Books
             </Link>
@@ -454,7 +459,7 @@ function CheckoutDialog({
 
   function handleOpenChange(next: boolean) {
     if (next) {
-      setValues({ due_at: "" })
+      setValues({ due_at: toDateTimeLocalValue(new Date()) })
       setFieldErrors({})
     }
     onOpenChange(next)

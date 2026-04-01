@@ -1,16 +1,8 @@
-import { Plus, Search } from "lucide-react"
-import { useMemo, useState } from "react"
-import { Link, useSearchParams } from "react-router"
+import { Plus } from "lucide-react"
+import { useState } from "react"
 
 import { Alert, AlertDescription } from "@/features/shared/components/ui/alert"
 import { Button } from "@/features/shared/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/features/shared/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -22,201 +14,15 @@ import {
 } from "@/features/shared/components/ui/dialog"
 import { Input } from "@/features/shared/components/ui/input"
 import { Label } from "@/features/shared/components/ui/label"
-import { Skeleton } from "@/features/shared/components/ui/skeleton"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/features/shared/components/ui/table"
 import { Textarea } from "@/features/shared/components/ui/textarea"
 import { getApiErrorMessage } from "@/features/shared/lib/api-error"
 import {
   bookCreateSchema,
   type BookCreateFormValues,
 } from "@/features/library/schemas"
-import {
-  useBooksQuery,
-  useCreateBookMutation,
-} from "@/features/library/hooks/use-library-queries"
+import { useCreateBookMutation } from "@/features/library/hooks/use-library-queries"
 
-function LibrarySearchFilters({
-  initialQ,
-  initialGenre,
-}: {
-  initialQ: string
-  initialGenre: string
-}) {
-  const [, setSearchParams] = useSearchParams()
-  const [localQ, setLocalQ] = useState(initialQ)
-  const [localGenre, setLocalGenre] = useState(initialGenre)
-
-  function applyFilters(e: React.FormEvent) {
-    e.preventDefault()
-    const next = new URLSearchParams()
-    if (localQ.trim()) next.set("q", localQ.trim())
-    if (localGenre.trim()) next.set("genre", localGenre.trim())
-    setSearchParams(next)
-  }
-
-  function clearFilters() {
-    setLocalQ("")
-    setLocalGenre("")
-    setSearchParams({})
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Search & filters</CardTitle>
-        <CardDescription>
-          Matches title, author, or ISBN. Genre is an exact match.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          onSubmit={applyFilters}
-          className="flex flex-col gap-4 sm:flex-row sm:items-end"
-        >
-          <div className="grid flex-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="q">Search</Label>
-              <div className="relative">
-                <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
-                <Input
-                  id="q"
-                  className="pl-8"
-                  placeholder="Title, author, ISBN…"
-                  value={localQ}
-                  onChange={(e) => setLocalQ(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="genre">Genre</Label>
-              <Input
-                id="genre"
-                placeholder="e.g. fiction"
-                value={localGenre}
-                onChange={(e) => setLocalGenre(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit">Apply</Button>
-            <Button type="button" variant="outline" onClick={clearFilters}>
-              Clear
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
-  )
-}
-
-export function LibraryPage() {
-  const [searchParams] = useSearchParams()
-  const q = searchParams.get("q") ?? undefined
-  const genre = searchParams.get("genre") ?? undefined
-
-  const listParams = useMemo(() => {
-    const p: { q?: string; genre?: string } = {}
-    if (q) p.q = q
-    if (genre) p.genre = genre
-    return Object.keys(p).length ? p : undefined
-  }, [q, genre])
-
-  const booksQuery = useBooksQuery(listParams)
-
-  return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Books</h1>
-          <p className="text-muted-foreground text-sm">
-            Search the catalog, add titles, open a book for details and
-            circulation.
-          </p>
-        </div>
-        <CreateBookDialog />
-      </div>
-
-      <LibrarySearchFilters
-        key={searchParams.toString()}
-        initialQ={q ?? ""}
-        initialGenre={genre ?? ""}
-      />
-
-      {booksQuery.isPending ? (
-        <div className="space-y-2">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-      ) : booksQuery.isError ? (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {getApiErrorMessage(booksQuery.error, "Failed to load books")}
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <Card>
-          <CardContent className="pt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>Genre</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {booksQuery.data?.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-muted-foreground">
-                      No books match your filters.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  booksQuery.data?.map((b) => (
-                    <TableRow key={b.id}>
-                      <TableCell>
-                        <Link
-                          to={`/library/books/${b.id}`}
-                          className="text-primary font-medium hover:underline"
-                        >
-                          {b.title}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{b.author}</TableCell>
-                      <TableCell>{b.genre ?? "—"}</TableCell>
-                      <TableCell className="text-right">
-                        {b.is_checked_out ? (
-                          <span className="text-amber-600 dark:text-amber-400">
-                            Checked out
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            Available
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
-}
-
-function CreateBookDialog() {
+export function CreateBookDialog() {
   const [open, setOpen] = useState(false)
   const create = useCreateBookMutation()
   const [values, setValues] = useState<BookCreateFormValues>({

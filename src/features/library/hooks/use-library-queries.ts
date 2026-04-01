@@ -16,6 +16,13 @@ export function useBooksQuery(params?: ListBooksParams) {
   })
 }
 
+export function useMyLoansQuery() {
+  return useQuery({
+    queryKey: libraryKeys.loans(),
+    queryFn: () => libraryRequests.listMyOpenLoans(),
+  })
+}
+
 export function useBookQuery(bookId: number, enabled = true) {
   return useQuery({
     queryKey: libraryKeys.book(bookId),
@@ -66,6 +73,7 @@ export function useCheckoutMutation(bookId: number) {
       void queryClient.invalidateQueries({
         queryKey: libraryKeys.book(bookId),
       })
+      void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
     },
   })
 }
@@ -79,6 +87,7 @@ export function useCheckinMutation(bookId: number) {
       void queryClient.invalidateQueries({
         queryKey: libraryKeys.book(bookId),
       })
+      void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
     },
   })
 }
