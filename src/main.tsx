@@ -5,7 +5,17 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { Router } from './router'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 1,
+    },
+    mutations: {
+      retry: false,
+    },
+  },
+})
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
