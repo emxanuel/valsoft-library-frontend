@@ -24,6 +24,7 @@ import type {
   LoanRead,
   MyOpenLoanRead,
 } from "./types"
+import { config } from "@/config"
 
 export async function listMyOpenLoans(): Promise<MyOpenLoanRead[]> {
   const { data } = await api.get<MyOpenLoanRead[]>("/library/loans")
@@ -115,8 +116,7 @@ export function enrichBookWithProgress(
   payload: BookAiEnrichRequest,
   onProgress: (p: BookAiEnrichProgress) => void,
 ): Promise<BookAiEnrichResponse> {
-  const proto = window.location.protocol === "https:" ? "wss:" : "ws:"
-  const url = `${proto}//${window.location.host}/library/books/ai/enrich/stream`
+  const url = `${config.apiBaseUrlWs}/library/books/ai/enrich/stream`
 
   return new Promise((resolve, reject) => {
     let settled = false
