@@ -32,7 +32,6 @@ export default defineConfig(({ mode }) => {
         "/library": {
           target: proxyTarget,
           changeOrigin: true,
-          ws: true,
         },
         "/admin": {
           target: proxyTarget,
