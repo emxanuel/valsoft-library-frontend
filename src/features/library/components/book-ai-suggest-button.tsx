@@ -42,6 +42,7 @@ export function BookAiSuggestButton({
 }: BookAiSuggestButtonProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pending, setPending] = useState<BookAiEnrichResponse | null>(null)
+  const [progressLabel, setProgressLabel] = useState<string | null>(null)
 
   const hasTitleAuthor =
     title.trim().length > 0 && author.trim().length > 0
@@ -49,7 +50,12 @@ export function BookAiSuggestButton({
   const canSuggest = hasTitleAuthor || hasIsbn
 
   const enrich = useMutation({
-    mutationFn: libraryRequests.enrichBook,
+    mutationFn: (req: BookAiEnrichRequest) => {
+      setProgressLabel(null)
+      return libraryRequests.enrichBookWithProgress(req, (p) => {
+        setProgressLabel(p.message ?? p.step)
+      })
+    },
     onSuccess: (data) => {
       if (data.requires_confirmation && data.duplicate_candidates.length > 0) {
         setPending(data)
@@ -57,6 +63,9 @@ export function BookAiSuggestButton({
       } else {
         onApply(data.suggestions)
       }
+    },
+    onSettled: () => {
+      setProgressLabel(null)
     },
   })
 
@@ -96,6 +105,10 @@ export function BookAiSuggestButton({
           {enrich.isPending ? "Working…" : "AI suggest"}
         </Button>
       </div>
+
+      {enrich.isPending && progressLabel ? (
+        <p className="text-muted-foreground text-sm">{progressLabel}</p>
+      ) : null}
 
       {enrich.isError ? (
         <Alert variant="destructive">
