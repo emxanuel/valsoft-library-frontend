@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import axios from "axios"
 import { useEffect } from "react"
 
 import { authKeys } from "@/features/auth/query-keys"
@@ -32,10 +31,7 @@ export function useMeQuery(enabled: boolean) {
     }
 
     if (query.isError) {
-      const err = query.error
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        setSession(null)
-      }
+      setSession(null)
       setStatus("anonymous")
     }
   }, [

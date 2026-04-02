@@ -59,6 +59,18 @@ export type ClientRead = {
   updated_at: string
 }
 
+export type ClientCreate = {
+  name: string
+  email: string
+  phone?: string | null
+}
+
+export type ClientUpdate = {
+  name?: string | null
+  email?: string | null
+  phone?: string | null
+}
+
 export type ClientListPage = {
   items: ClientRead[]
   total: number

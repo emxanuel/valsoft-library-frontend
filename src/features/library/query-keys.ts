@@ -24,4 +24,5 @@ export const libraryKeys = {
       params?.offset ?? 0,
       params?.limit ?? 20,
     ] as const,
+  client: (id: number) => ["library", "clients", id] as const,
 }

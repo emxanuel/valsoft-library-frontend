@@ -7,7 +7,9 @@ import type {
   BookListPage,
   BookUpdate,
   CheckoutRequest,
+  ClientCreate,
   ClientListPage,
+  ClientUpdate,
   ListBooksParams,
   ListClientsParams,
 } from "@/features/library/services/types"
@@ -32,6 +34,43 @@ export function useClientsQuery(params?: ListClientsParams) {
     queryKey: libraryKeys.clients(params),
     queryFn: () => libraryRequests.listClients(params),
     staleTime: 0,
+  })
+}
+
+export function useCreateClientMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: ClientCreate) =>
+      libraryRequests.createClient(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["library", "clients"] })
+      void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+    },
+  })
+}
+
+export function useUpdateClientMutation(clientId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: ClientUpdate) =>
+      libraryRequests.updateClient(clientId, payload),
+    onSuccess: (data) => {
+      void queryClient.invalidateQueries({ queryKey: ["library", "clients"] })
+      void queryClient.setQueryData(libraryKeys.client(data.id), data)
+      void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+    },
+  })
+}
+
+export function useDeleteClientMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (clientId: number) => libraryRequests.deleteClient(clientId),
+    onSuccess: (_void, clientId) => {
+      void queryClient.invalidateQueries({ queryKey: ["library", "clients"] })
+      void queryClient.removeQueries({ queryKey: libraryKeys.client(clientId) })
+      void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+    },
   })
 }
 

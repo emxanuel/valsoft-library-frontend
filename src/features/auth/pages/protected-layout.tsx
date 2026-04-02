@@ -1,4 +1,3 @@
-import axios from "axios"
 import { Navigate, Outlet } from "react-router"
 
 import { Skeleton } from "@/features/shared/components/ui/skeleton"
@@ -17,16 +16,7 @@ export function ProtectedLayout() {
   }
 
   if (me.isError) {
-    if (axios.isAxiosError(me.error) && me.error.response?.status === 401) {
-      return <Navigate to="/login" replace />
-    }
-    return (
-      <div className="flex min-h-svh items-center justify-center px-4">
-        <p className="text-destructive text-sm">
-          Could not verify your session. Try signing in again.
-        </p>
-      </div>
-    )
+    return <Navigate to="/login" replace />
   }
 
   return <Outlet />

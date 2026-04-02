@@ -147,10 +147,11 @@ export function LoansPage() {
                 ) : (
                   loans.map((loan) => (
                     <TableRow key={loan.loan_id}>
-                      <TableCell>
+                      <TableCell className="max-w-56 min-w-0">
                         <Link
                           to={`/library/books/${loan.book_id}`}
-                          className="text-primary font-medium hover:underline"
+                          className="text-primary block truncate font-medium hover:underline"
+                          title={loan.book_title}
                         >
                           {loan.book_title}
                         </Link>

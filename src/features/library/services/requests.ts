@@ -5,7 +5,10 @@ import type {
   BookRead,
   BookUpdate,
   CheckoutRequest,
+  ClientCreate,
   ClientListPage,
+  ClientRead,
+  ClientUpdate,
   ListBooksParams,
   ListClientsParams,
   LoanRead,
@@ -29,6 +32,31 @@ export async function listClients(
     params,
   })
   return data
+}
+
+export async function createClient(payload: ClientCreate): Promise<ClientRead> {
+  const { data } = await api.post<ClientRead>("/library/clients", payload)
+  return data
+}
+
+export async function getClient(clientId: number): Promise<ClientRead> {
+  const { data } = await api.get<ClientRead>(`/library/clients/${clientId}`)
+  return data
+}
+
+export async function updateClient(
+  clientId: number,
+  payload: ClientUpdate,
+): Promise<ClientRead> {
+  const { data } = await api.patch<ClientRead>(
+    `/library/clients/${clientId}`,
+    payload,
+  )
+  return data
+}
+
+export async function deleteClient(clientId: number): Promise<void> {
+  await api.delete(`/library/clients/${clientId}`)
 }
 
 export async function createBook(payload: BookCreate): Promise<BookRead> {
