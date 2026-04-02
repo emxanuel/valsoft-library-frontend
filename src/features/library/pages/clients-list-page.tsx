@@ -1,6 +1,6 @@
 import { Pencil, Trash2 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react"
-import { useSearchParams } from "react-router"
+import { Link, useSearchParams } from "react-router"
 
 import { Alert, AlertDescription } from "@/features/shared/components/ui/alert"
 import { Button } from "@/features/shared/components/ui/button"
@@ -169,8 +169,22 @@ export function ClientsListPage() {
                 ) : (
                   items.map((c) => (
                     <TableRow key={c.id}>
-                      <TableCell className="font-medium">{c.name}</TableCell>
-                      <TableCell>{c.email}</TableCell>
+                      <TableCell className="font-medium">
+                        <Link
+                          to={`/library/clients/${c.id}`}
+                          className="text-primary hover:underline"
+                        >
+                          {c.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          to={`/library/clients/${c.id}`}
+                          className="text-primary hover:underline"
+                        >
+                          {c.email}
+                        </Link>
+                      </TableCell>
                       <TableCell>{c.phone ?? "—"}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatLoanDate(c.created_at)}

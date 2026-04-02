@@ -1,6 +1,8 @@
 import type {
+  ListAdminOpenLoansParams,
   ListBooksParams,
   ListClientsParams,
+  ListLoanHistoryParams,
 } from "@/features/library/services/types"
 
 /** Primitives only — avoids subtle cache key mismatches when hashing param objects. */
@@ -17,6 +19,22 @@ export const libraryKeys = {
   book: (id: number) => ["library", "books", id] as const,
   bookCopies: (bookId: number) => ["library", "books", bookId, "copies"] as const,
   loans: () => ["library", "loans"] as const,
+  adminOpenLoans: (params?: ListAdminOpenLoansParams) =>
+    [
+      "admin",
+      "loans",
+      params?.offset ?? 0,
+      params?.limit ?? 20,
+    ] as const,
+  loanHistory: (params?: ListLoanHistoryParams) =>
+    [
+      "library",
+      "loans",
+      "history",
+      params?.client_id ?? null,
+      params?.offset ?? 0,
+      params?.limit ?? 20,
+    ] as const,
   clients: (params?: ListClientsParams) =>
     [
       "library",

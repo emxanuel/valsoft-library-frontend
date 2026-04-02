@@ -15,12 +15,34 @@ import type {
   ClientUpdate,
   ListBooksParams,
   ListClientsParams,
+  AdminOpenLoansPage,
+  ListAdminOpenLoansParams,
+  ListLoanHistoryParams,
+  LoanHistoryPage,
   LoanRead,
   MyOpenLoanRead,
 } from "./types"
 
 export async function listMyOpenLoans(): Promise<MyOpenLoanRead[]> {
   const { data } = await api.get<MyOpenLoanRead[]>("/library/loans")
+  return data
+}
+
+export async function listAdminOpenLoans(
+  params?: ListAdminOpenLoansParams,
+): Promise<AdminOpenLoansPage> {
+  const { data } = await api.get<AdminOpenLoansPage>("/admin/loans", {
+    params,
+  })
+  return data
+}
+
+export async function listLoanHistory(
+  params?: ListLoanHistoryParams,
+): Promise<LoanHistoryPage> {
+  const { data } = await api.get<LoanHistoryPage>("/library/loans/history", {
+    params,
+  })
   return data
 }
 

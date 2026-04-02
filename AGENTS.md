@@ -39,7 +39,7 @@ The UI targets the FastAPI app in **valsoft-library-backend**:
 
 - **Auth** (cookie `session_id`): `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout`
 - **Library** (requires login; **admin** and **employee**): `GET /library/books`, `GET /library/loans`, `GET /library/clients` (paginated list), `POST /library/books`, `GET/PATCH/DELETE /library/books/{id}`, `POST /library/clients`, `GET/PATCH/DELETE /library/clients/{id}`, `POST .../checkout` (body includes `client` + optional `due_at`), `POST .../checkin`
-- **Admin** (**admin** only): `GET/POST /admin/employees`, `GET/PATCH/DELETE /admin/employees/{id}`
+- **Admin** (**admin** only): `GET /admin/loans` (paginated open loans with staff fields), `GET/POST /admin/employees`, `GET/PATCH/DELETE /admin/employees/{id}`
 
 See the backend [`AGENTS.md`](../valsoft-library-backend/AGENTS.md) for behavior (soft delete, loans, etc.).
 

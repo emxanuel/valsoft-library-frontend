@@ -25,8 +25,10 @@ import { cn } from "@/features/shared/lib/utils"
 function documentTitleForAppPath(pathname: string): string {
   if (pathname === "/library") return `Overview | ${APP_NAME}`
   if (pathname === "/library/books") return `Books | ${APP_NAME}`
+  if (pathname === "/library/loans/history") return `Past returns | ${APP_NAME}`
   if (pathname === "/library/loans") return `Open loans | ${APP_NAME}`
   if (pathname === "/library/clients") return `Clients | ${APP_NAME}`
+  if (/^\/library\/clients\/[^/]+$/.test(pathname)) return `Client | ${APP_NAME}`
   if (/^\/library\/books\/[^/]+$/.test(pathname)) return `Book | ${APP_NAME}`
   if (pathname === "/admin/employees") return `Staff | ${APP_NAME}`
   return APP_NAME

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { libraryKeys } from "@/features/library/query-keys"
 import * as libraryRequests from "@/features/library/services/requests"
 import type {
+  AdminOpenLoansPage,
   BookCopyCreate,
   BookCopyListResponse,
   BookCopyUpdate,
@@ -13,8 +14,11 @@ import type {
   ClientCreate,
   ClientListPage,
   ClientUpdate,
+  ListAdminOpenLoansParams,
   ListBooksParams,
   ListClientsParams,
+  ListLoanHistoryParams,
+  LoanHistoryPage,
 } from "@/features/library/services/types"
 
 export function useBooksQuery(params?: ListBooksParams) {
@@ -25,10 +29,43 @@ export function useBooksQuery(params?: ListBooksParams) {
   })
 }
 
-export function useMyLoansQuery() {
+export function useMyLoansQuery(enabled = true) {
   return useQuery({
     queryKey: libraryKeys.loans(),
     queryFn: () => libraryRequests.listMyOpenLoans(),
+    enabled,
+  })
+}
+
+export function useAdminOpenLoansQuery(
+  params: ListAdminOpenLoansParams,
+  enabled = true,
+) {
+  return useQuery<AdminOpenLoansPage>({
+    queryKey: libraryKeys.adminOpenLoans(params),
+    queryFn: () => libraryRequests.listAdminOpenLoans(params),
+    staleTime: 0,
+    enabled,
+  })
+}
+
+export function useLoanHistoryQuery(
+  params: ListLoanHistoryParams,
+  enabled = true,
+) {
+  return useQuery<LoanHistoryPage>({
+    queryKey: libraryKeys.loanHistory(params),
+    queryFn: () => libraryRequests.listLoanHistory(params),
+    staleTime: 0,
+    enabled,
+  })
+}
+
+export function useClientQuery(clientId: number, enabled = true) {
+  return useQuery({
+    queryKey: libraryKeys.client(clientId),
+    queryFn: () => libraryRequests.getClient(clientId),
+    enabled: enabled && clientId > 0,
   })
 }
 
@@ -48,6 +85,7 @@ export function useCreateClientMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["library", "clients"] })
       void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+      void queryClient.invalidateQueries({ queryKey: ["admin", "loans"] })
     },
   })
 }
@@ -61,6 +99,7 @@ export function useUpdateClientMutation(clientId: number) {
       void queryClient.invalidateQueries({ queryKey: ["library", "clients"] })
       void queryClient.setQueryData(libraryKeys.client(data.id), data)
       void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+      void queryClient.invalidateQueries({ queryKey: ["admin", "loans"] })
     },
   })
 }
@@ -73,6 +112,8 @@ export function useDeleteClientMutation() {
       void queryClient.invalidateQueries({ queryKey: ["library", "clients"] })
       void queryClient.removeQueries({ queryKey: libraryKeys.client(clientId) })
       void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+      void queryClient.invalidateQueries({ queryKey: ["admin", "loans"] })
+      void queryClient.invalidateQueries({ queryKey: ["library", "loans", "history"] })
     },
   })
 }
@@ -139,7 +180,9 @@ export function useCheckoutMutation(bookId: number) {
         queryKey: libraryKeys.bookCopies(bookId),
       })
       void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+      void queryClient.invalidateQueries({ queryKey: ["admin", "loans"] })
       void queryClient.invalidateQueries({ queryKey: ["library", "clients"] })
+      void queryClient.invalidateQueries({ queryKey: ["library", "loans", "history"] })
     },
   })
 }
@@ -151,6 +194,8 @@ export function useCheckinLoanMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["library", "books"] })
       void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+      void queryClient.invalidateQueries({ queryKey: ["admin", "loans"] })
+      void queryClient.invalidateQueries({ queryKey: ["library", "loans", "history"] })
     },
   })
 }
