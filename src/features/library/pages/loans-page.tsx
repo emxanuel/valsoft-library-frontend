@@ -131,6 +131,7 @@ export function LoansPage() {
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead>Author</TableHead>
+                  <TableHead>Copy</TableHead>
                   <TableHead>Client</TableHead>
                   <TableHead>Checked out</TableHead>
                   <TableHead>Due</TableHead>
@@ -140,7 +141,7 @@ export function LoansPage() {
               <TableBody>
                 {loans.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-muted-foreground">
+                    <TableCell colSpan={7} className="text-muted-foreground">
                       No open loans.
                     </TableCell>
                   </TableRow>
@@ -157,6 +158,9 @@ export function LoansPage() {
                         </Link>
                       </TableCell>
                       <TableCell>{loan.book_author}</TableCell>
+                      <TableCell className="tabular-nums text-muted-foreground">
+                        {loan.copy_barcode ?? `#${loan.copy_id}`}
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-0.5">
                           <span>{loan.client_name ?? "—"}</span>
@@ -174,7 +178,7 @@ export function LoansPage() {
                         {loan.due_at ? formatLoanDate(loan.due_at) : "—"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <LoanCheckInButton bookId={loan.book_id} />
+                        <LoanCheckInButton loanId={loan.loan_id} />
                       </TableCell>
                     </TableRow>
                   ))

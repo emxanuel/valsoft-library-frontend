@@ -9,6 +9,8 @@ export type BookRead = {
   image_url: string | null
   created_at: string
   updated_at: string
+  total_copies: number
+  available_copies: number
   is_checked_out: boolean
 }
 
@@ -39,6 +41,27 @@ export type BookUpdate = {
   image_url?: string | null
 }
 
+export type BookCopyRead = {
+  id: number
+  book_id: number
+  barcode: string | null
+  is_checked_out: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type BookCopyListResponse = {
+  items: BookCopyRead[]
+}
+
+export type BookCopyCreate = {
+  barcode?: string | null
+}
+
+export type BookCopyUpdate = {
+  barcode?: string | null
+}
+
 export type ClientCheckout = {
   name: string
   email: string
@@ -48,6 +71,7 @@ export type ClientCheckout = {
 export type CheckoutRequest = {
   due_at?: string | null
   client: ClientCheckout
+  copy_id?: number | null
 }
 
 export type ClientRead = {
@@ -87,6 +111,8 @@ export type ListClientsParams = {
 export type LoanRead = {
   id: number
   book_id: number
+  copy_id: number
+  copy_barcode: string | null
   user_id: number
   client_id: number | null
   client_name: string | null
@@ -100,6 +126,8 @@ export type LoanRead = {
 export type MyOpenLoanRead = {
   loan_id: number
   book_id: number
+  copy_id: number
+  copy_barcode: string | null
   book_title: string
   book_author: string
   client_id: number | null

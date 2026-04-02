@@ -15,6 +15,7 @@ export const libraryKeys = {
       params?.limit ?? 20,
     ] as const,
   book: (id: number) => ["library", "books", id] as const,
+  bookCopies: (bookId: number) => ["library", "books", bookId, "copies"] as const,
   loans: () => ["library", "loans"] as const,
   clients: (params?: ListClientsParams) =>
     [

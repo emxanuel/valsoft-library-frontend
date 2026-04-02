@@ -1,5 +1,9 @@
 import { api } from "@/features/shared/services/client"
 import type {
+  BookCopyCreate,
+  BookCopyListResponse,
+  BookCopyRead,
+  BookCopyUpdate,
   BookCreate,
   BookListPage,
   BookRead,
@@ -92,7 +96,40 @@ export async function checkoutBook(
   return data
 }
 
-export async function checkinBook(bookId: number): Promise<LoanRead> {
-  const { data } = await api.post<LoanRead>(`/library/books/${bookId}/checkin`)
+export async function listBookCopies(bookId: number): Promise<BookCopyListResponse> {
+  const { data } = await api.get<BookCopyListResponse>(
+    `/library/books/${bookId}/copies`,
+  )
+  return data
+}
+
+export async function createBookCopy(
+  bookId: number,
+  payload: BookCopyCreate,
+): Promise<BookCopyRead> {
+  const { data } = await api.post<BookCopyRead>(
+    `/library/books/${bookId}/copies`,
+    payload,
+  )
+  return data
+}
+
+export async function updateBookCopy(
+  copyId: number,
+  payload: BookCopyUpdate,
+): Promise<BookCopyRead> {
+  const { data } = await api.patch<BookCopyRead>(
+    `/library/copies/${copyId}`,
+    payload,
+  )
+  return data
+}
+
+export async function deleteBookCopy(copyId: number): Promise<void> {
+  await api.delete(`/library/copies/${copyId}`)
+}
+
+export async function checkinLoan(loanId: number): Promise<LoanRead> {
+  const { data } = await api.post<LoanRead>(`/library/loans/${loanId}/checkin`)
   return data
 }

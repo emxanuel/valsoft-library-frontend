@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import axios from "axios"
-import { ArrowLeft, Trash2 } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { type FormEvent, useEffect, useMemo, useState } from "react"
 import { type Resolver, Controller, useForm } from "react-hook-form"
 import { Link, useNavigate, useParams } from "react-router"
 
@@ -25,6 +25,14 @@ import {
 import { Input } from "@/features/shared/components/ui/input"
 import { Label } from "@/features/shared/components/ui/label"
 import { Skeleton } from "@/features/shared/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/features/shared/components/ui/table"
 import { Textarea } from "@/features/shared/components/ui/textarea"
 import { APP_NAME } from "@/features/shared/constants/branding"
 import { useDocumentTitle } from "@/features/shared/hooks/use-document-title"
@@ -36,12 +44,15 @@ import {
   type CheckoutFormValues,
 } from "@/features/library/schemas"
 import {
+  useBookCopiesQuery,
   useBookQuery,
-  useCheckinMutation,
   useCheckoutMutation,
+  useCreateBookCopyMutation,
+  useDeleteBookCopyMutation,
   useDeleteBookMutation,
   useUpdateBookMutation,
 } from "@/features/library/hooks/use-library-queries"
+import type { BookCopyRead } from "@/features/library/services/types"
 
 function toDueAtIso(local: string): string | undefined {
   if (!local.trim()) return undefined
@@ -61,9 +72,11 @@ export function BookDetailPage() {
 
   const validId = Number.isFinite(id) && id >= 1
   const bookQuery = useBookQuery(validId ? id : 0, validId)
+  const copiesQuery = useBookCopiesQuery(validId ? id : 0, validId)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [addCopyOpen, setAddCopyOpen] = useState(false)
 
   const editInitial = useMemo(() => {
     const b = bookQuery.data
@@ -168,10 +181,12 @@ export function BookDetailPage() {
             <Trash2 className="size-4" />
             Delete
           </Button>
-          {book.is_checked_out ? (
-            <CheckinButton bookId={book.id} />
-          ) : (
+          {book.available_copies > 0 ? (
             <Button onClick={() => setCheckoutOpen(true)}>Check out</Button>
+          ) : (
+            <Button variant="secondary" disabled>
+              No copies available
+            </Button>
           )}
         </div>
       </div>
@@ -179,7 +194,13 @@ export function BookDetailPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Details</CardTitle>
-          <CardDescription>Catalog metadata and availability.</CardDescription>
+          <CardDescription>
+            Catalog metadata. Returns are processed from{" "}
+            <Link to="/library/loans" className="text-primary underline">
+              Open loans
+            </Link>
+            .
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -190,11 +211,19 @@ export function BookDetailPage() {
             <p className="text-muted-foreground text-sm">Published</p>
             <p>{book.published_year ?? "—"}</p>
           </div>
-          <div className="sm:col-span-2">
+          <div>
+            <p className="text-muted-foreground text-sm">Copies</p>
+            <p className="tabular-nums">
+              {book.available_copies} available of {book.total_copies}
+            </p>
+          </div>
+          <div>
             <p className="text-muted-foreground text-sm">Status</p>
             <p>
-              {book.is_checked_out ? (
-                <span className="text-status-on-loan">Checked out</span>
+              {book.total_copies === 0 ? (
+                <span className="text-muted-foreground">No copies</span>
+              ) : book.is_checked_out ? (
+                <span className="text-status-on-loan">All copies out</span>
               ) : (
                 <span className="text-muted-foreground">Available</span>
               )}
@@ -206,6 +235,70 @@ export function BookDetailPage() {
               <p className="whitespace-pre-wrap">{book.description}</p>
             </div>
           ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle className="text-base">Copies</CardTitle>
+            <CardDescription>
+              Physical items in circulation. Barcodes are optional and must be
+              unique when set.
+            </CardDescription>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => setAddCopyOpen(true)}
+          >
+            <Plus className="size-4" />
+            Add copy
+          </Button>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {copiesQuery.isPending ? (
+            <Skeleton className="h-24 w-full" />
+          ) : copiesQuery.isError ? (
+            <Alert variant="destructive">
+              <AlertDescription>
+                {getApiErrorMessage(copiesQuery.error, "Failed to load copies")}
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-20">ID</TableHead>
+                  <TableHead>Barcode</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(copiesQuery.data?.items ?? []).length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="text-muted-foreground"
+                    >
+                      No copies yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  (copiesQuery.data?.items ?? []).map((row) => (
+                    <CopyRow
+                      key={row.id}
+                      bookId={book.id}
+                      copy={row}
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -231,6 +324,12 @@ export function BookDetailPage() {
         bookId={book.id}
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
+      />
+
+      <AddCopyDialog
+        bookId={book.id}
+        open={addCopyOpen}
+        onOpenChange={setAddCopyOpen}
       />
     </div>
   )
@@ -265,16 +364,114 @@ function BookCover({
   )
 }
 
-function CheckinButton({ bookId }: { bookId: number }) {
-  const checkin = useCheckinMutation(bookId)
+function CopyRow({
+  bookId,
+  copy,
+}: {
+  bookId: number
+  copy: BookCopyRead
+}) {
+  const del = useDeleteBookCopyMutation(bookId)
   return (
-    <Button
-      variant="secondary"
-      disabled={checkin.isPending}
-      onClick={() => checkin.mutate()}
+    <TableRow>
+      <TableCell className="tabular-nums">{copy.id}</TableCell>
+      <TableCell>{copy.barcode ?? "—"}</TableCell>
+      <TableCell>
+        {copy.is_checked_out ? (
+          <span className="text-status-on-loan">Checked out</span>
+        ) : (
+          <span className="text-muted-foreground">Available</span>
+        )}
+      </TableCell>
+      <TableCell className="text-right">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="text-destructive"
+          disabled={copy.is_checked_out || del.isPending}
+          onClick={() => del.mutate(copy.id)}
+        >
+          {del.isPending ? "…" : "Remove"}
+        </Button>
+      </TableCell>
+    </TableRow>
+  )
+}
+
+function AddCopyDialog({
+  bookId,
+  open,
+  onOpenChange,
+}: {
+  bookId: number
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const createCopy = useCreateBookCopyMutation(bookId)
+  const [barcode, setBarcode] = useState("")
+
+  function submit(e: FormEvent) {
+    e.preventDefault()
+    const b = barcode.trim()
+    createCopy.mutate(
+      { barcode: b || undefined },
+      {
+        onSuccess: () => onOpenChange(false),
+      },
+    )
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (next) setBarcode("")
+        onOpenChange(next)
+      }}
     >
-      {checkin.isPending ? "Returning…" : "Check in"}
-    </Button>
+      <DialogContent>
+        <form onSubmit={submit} noValidate>
+          <DialogHeader>
+            <DialogTitle>Add copy</DialogTitle>
+            <DialogDescription>
+              Creates another lendable copy for this title.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {createCopy.isError ? (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {getApiErrorMessage(createCopy.error, "Could not add copy")}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            <div className="space-y-2">
+              <Label htmlFor="copy-barcode">Barcode (optional)</Label>
+              <Input
+                id="copy-barcode"
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                placeholder="Shelf label or barcode"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createCopy.isPending}>
+              {createCopy.isPending ? "Adding…" : "Add copy"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 

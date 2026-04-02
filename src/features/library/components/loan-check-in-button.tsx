@@ -1,14 +1,14 @@
 import { Button } from "@/features/shared/components/ui/button"
-import { useCheckinMutation } from "@/features/library/hooks/use-library-queries"
+import { useCheckinLoanMutation } from "@/features/library/hooks/use-library-queries"
 
-export function LoanCheckInButton({ bookId }: { bookId: number }) {
-  const checkin = useCheckinMutation(bookId)
+export function LoanCheckInButton({ loanId }: { loanId: number }) {
+  const checkin = useCheckinLoanMutation()
   return (
     <Button
       variant="secondary"
       size="sm"
       disabled={checkin.isPending}
-      onClick={() => checkin.mutate()}
+      onClick={() => checkin.mutate(loanId)}
     >
       {checkin.isPending ? "Returning…" : "Check in"}
     </Button>

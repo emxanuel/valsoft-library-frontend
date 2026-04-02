@@ -3,6 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { libraryKeys } from "@/features/library/query-keys"
 import * as libraryRequests from "@/features/library/services/requests"
 import type {
+  BookCopyCreate,
+  BookCopyListResponse,
+  BookCopyUpdate,
   BookCreate,
   BookListPage,
   BookUpdate,
@@ -82,6 +85,14 @@ export function useBookQuery(bookId: number, enabled = true) {
   })
 }
 
+export function useBookCopiesQuery(bookId: number, enabled = true) {
+  return useQuery<BookCopyListResponse>({
+    queryKey: libraryKeys.bookCopies(bookId),
+    queryFn: () => libraryRequests.listBookCopies(bookId),
+    enabled: enabled && bookId > 0,
+  })
+}
+
 export function useCreateBookMutation() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -124,22 +135,72 @@ export function useCheckoutMutation(bookId: number) {
       void queryClient.invalidateQueries({
         queryKey: libraryKeys.book(bookId),
       })
+      void queryClient.invalidateQueries({
+        queryKey: libraryKeys.bookCopies(bookId),
+      })
       void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
       void queryClient.invalidateQueries({ queryKey: ["library", "clients"] })
     },
   })
 }
 
-export function useCheckinMutation(bookId: number) {
+export function useCheckinLoanMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: () => libraryRequests.checkinBook(bookId),
+    mutationFn: (loanId: number) => libraryRequests.checkinLoan(loanId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["library", "books"] })
+      void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+    },
+  })
+}
+
+export function useCreateBookCopyMutation(bookId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: BookCopyCreate) =>
+      libraryRequests.createBookCopy(bookId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["library", "books"] })
       void queryClient.invalidateQueries({
         queryKey: libraryKeys.book(bookId),
       })
-      void queryClient.invalidateQueries({ queryKey: libraryKeys.loans() })
+      void queryClient.invalidateQueries({
+        queryKey: libraryKeys.bookCopies(bookId),
+      })
+    },
+  })
+}
+
+export function useUpdateBookCopyMutation(bookId: number, copyId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: BookCopyUpdate) =>
+      libraryRequests.updateBookCopy(copyId, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: libraryKeys.bookCopies(bookId),
+      })
+      void queryClient.invalidateQueries({
+        queryKey: libraryKeys.book(bookId),
+      })
+      void queryClient.invalidateQueries({ queryKey: ["library", "books"] })
+    },
+  })
+}
+
+export function useDeleteBookCopyMutation(bookId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (copyId: number) => libraryRequests.deleteBookCopy(copyId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: libraryKeys.bookCopies(bookId),
+      })
+      void queryClient.invalidateQueries({
+        queryKey: libraryKeys.book(bookId),
+      })
+      void queryClient.invalidateQueries({ queryKey: ["library", "books"] })
     },
   })
 }

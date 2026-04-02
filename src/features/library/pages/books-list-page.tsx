@@ -120,7 +120,7 @@ export function BooksListPage() {
                   <TableHead>Title</TableHead>
                   <TableHead>Author</TableHead>
                   <TableHead>Genre</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
+                  <TableHead className="text-right">Availability</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -147,14 +147,18 @@ export function BooksListPage() {
                       </TableCell>
                       <TableCell>{b.author}</TableCell>
                       <TableCell>{b.genre ?? "—"}</TableCell>
-                      <TableCell className="text-right">
-                        {b.is_checked_out ? (
-                          <span className="text-status-on-loan">
-                            Checked out
-                          </span>
+                      <TableCell className="text-right tabular-nums">
+                        {b.total_copies === 0 ? (
+                          <span className="text-muted-foreground">No copies</span>
                         ) : (
-                          <span className="text-muted-foreground">
-                            Available
+                          <span
+                            className={
+                              b.available_copies === 0
+                                ? "text-status-on-loan"
+                                : "text-muted-foreground"
+                            }
+                          >
+                            {b.available_copies}/{b.total_copies}
                           </span>
                         )}
                       </TableCell>

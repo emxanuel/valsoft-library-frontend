@@ -210,7 +210,7 @@ export function LibraryHomePage() {
                           {loan.due_at ? formatLoanDate(loan.due_at) : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          <LoanCheckInButton bookId={loan.book_id} />
+                          <LoanCheckInButton loanId={loan.loan_id} />
                         </TableCell>
                       </TableRow>
                     ))
