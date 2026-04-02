@@ -18,11 +18,14 @@ import { Input } from "@/features/shared/components/ui/input"
 import { Label } from "@/features/shared/components/ui/label"
 import { Textarea } from "@/features/shared/components/ui/textarea"
 import { getApiErrorMessage } from "@/features/shared/lib/api-error"
+import { BookAiSuggestButton } from "@/features/library/components/book-ai-suggest-button"
+import { CoverUrlPreview } from "@/features/library/components/cover-url-preview"
 import {
   bookCreateSchema,
   type BookCreateFormValues,
 } from "@/features/library/schemas"
 import { useCreateBookMutation } from "@/features/library/hooks/use-library-queries"
+import type { BookAiEnrichSuggestions } from "@/features/library/services/types"
 
 const emptyValues: BookCreateFormValues = {
   title: "",
@@ -42,6 +45,9 @@ export function CreateBookDialog() {
     handleSubmit,
     control,
     reset,
+    getValues,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<BookCreateFormValues>({
     resolver: zodResolver(bookCreateSchema) as Resolver<BookCreateFormValues>,
@@ -59,6 +65,21 @@ export function CreateBookDialog() {
     setOpen(false)
   }
 
+  function applyAiSuggestions(s: BookAiEnrichSuggestions) {
+    if (s.title?.trim()) setValue("title", s.title.trim())
+    if (s.author?.trim()) setValue("author", s.author.trim())
+    if (s.isbn !== undefined && s.isbn !== null)
+      setValue("isbn", typeof s.isbn === "string" ? s.isbn : String(s.isbn))
+    if (s.description !== undefined && s.description !== null)
+      setValue("description", s.description)
+    if (s.genre !== undefined && s.genre !== null)
+      setValue("genre", s.genre)
+    if (s.published_year !== undefined && s.published_year !== null)
+      setValue("published_year", s.published_year)
+    if (s.image_url !== undefined && s.image_url !== null)
+      setValue("image_url", s.image_url)
+  }
+
   function onValid(data: BookCreateFormValues) {
     const payload = {
       title: data.title,
@@ -71,6 +92,9 @@ export function CreateBookDialog() {
     }
     create.mutate(payload, { onSuccess: () => resetAndClose() })
   }
+
+  const previewUrl = watch("image_url")?.trim() || null
+  const previewTitle = String(watch("title") ?? "").trim() || "Book"
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -121,31 +145,54 @@ export function CreateBookDialog() {
                 </p>
               ) : null}
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="create-isbn">ISBN</Label>
-                <Input id="create-isbn" {...register("isbn")} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="create-year">Published year</Label>
-                <Controller
-                  name="published_year"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      id="create-year"
-                      type="number"
-                      value={field.value ?? ""}
-                      onChange={(e) => {
-                        const v = e.target.value
-                        field.onChange(v === "" ? undefined : Number(v))
-                      }}
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    />
-                  )}
+            <div className="space-y-2">
+              <Label htmlFor="create-isbn">ISBN</Label>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+                <Input
+                  id="create-isbn"
+                  className="min-w-0 flex-1"
+                  {...register("isbn")}
+                />
+                <BookAiSuggestButton
+                  compact
+                  title={String(watch("title") ?? "")}
+                  author={String(watch("author") ?? "")}
+                  isbn={String(watch("isbn") ?? "")}
+                  buildRequest={() => {
+                    const v = getValues()
+                    return {
+                      title: v.title.trim(),
+                      author: v.author.trim(),
+                      isbn: v.isbn?.trim() || undefined,
+                      description: v.description?.trim() || undefined,
+                      published_year: v.published_year ?? undefined,
+                      genre: v.genre?.trim() || undefined,
+                      image_url: v.image_url?.trim() || undefined,
+                    }
+                  }}
+                  onApply={applyAiSuggestions}
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-year">Published year</Label>
+              <Controller
+                name="published_year"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    id="create-year"
+                    type="number"
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      field.onChange(v === "" ? undefined : Number(v))
+                    }}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                  />
+                )}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="create-genre">Genre</Label>
@@ -165,6 +212,15 @@ export function CreateBookDialog() {
                   {errors.image_url.message}
                 </p>
               ) : null}
+              <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-start sm:gap-4">
+                <p className="text-muted-foreground shrink-0 text-sm">Preview</p>
+                <CoverUrlPreview
+                  key={previewUrl ?? ""}
+                  url={previewUrl}
+                  title={previewTitle}
+                  className="size-28 sm:size-32"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="create-desc">Description</Label>

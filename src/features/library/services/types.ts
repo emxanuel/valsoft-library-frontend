@@ -41,6 +41,42 @@ export type BookUpdate = {
   image_url?: string | null
 }
 
+export type BookAiEnrichRequest = {
+  title?: string
+  author?: string
+  isbn?: string | null
+  description?: string | null
+  published_year?: number | null
+  genre?: string | null
+  image_url?: string | null
+  /** When editing, exclude this book from duplicate detection */
+  exclude_book_id?: number | null
+}
+
+export type BookAiEnrichSuggestions = {
+  title?: string | null
+  author?: string | null
+  isbn?: string | null
+  description?: string | null
+  published_year?: number | null
+  genre?: string | null
+  image_url?: string | null
+}
+
+export type DuplicateCandidate = {
+  book_id: number
+  title: string
+  author: string
+  isbn: string | null
+  reason: string
+}
+
+export type BookAiEnrichResponse = {
+  suggestions: BookAiEnrichSuggestions
+  duplicate_candidates: DuplicateCandidate[]
+  requires_confirmation: boolean
+}
+
 export type BookCopyRead = {
   id: number
   book_id: number

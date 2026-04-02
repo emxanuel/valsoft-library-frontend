@@ -37,12 +37,15 @@ import { Textarea } from "@/features/shared/components/ui/textarea"
 import { APP_NAME } from "@/features/shared/constants/branding"
 import { useDocumentTitle } from "@/features/shared/hooks/use-document-title"
 import { getApiErrorMessage } from "@/features/shared/lib/api-error"
+import { BookAiSuggestButton } from "@/features/library/components/book-ai-suggest-button"
+import { CoverUrlPreview } from "@/features/library/components/cover-url-preview"
 import {
   bookUpdateSchema,
   checkoutSchema,
   type BookUpdateFormValues,
   type CheckoutFormValues,
 } from "@/features/library/schemas"
+import type { BookAiEnrichSuggestions } from "@/features/library/services/types"
 import {
   useBookCopiesQuery,
   useBookQuery,
@@ -148,7 +151,7 @@ export function BookDetailPage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-start">
-          <BookCover
+          <CoverUrlPreview
             url={book.image_url}
             title={book.title}
             className="h-40 w-28 shrink-0 sm:h-48 sm:w-32"
@@ -335,35 +338,6 @@ export function BookDetailPage() {
   )
 }
 
-function BookCover({
-  url,
-  title,
-  className,
-}: {
-  url: string | null
-  title: string
-  className?: string
-}) {
-  const [failed, setFailed] = useState(false)
-  if (!url || failed) {
-    return (
-      <div
-        className={`bg-muted shrink-0 rounded-md border border-dashed ${className ?? ""}`}
-        aria-hidden
-      />
-    )
-  }
-  return (
-    <img
-      src={url}
-      alt={`Cover: ${title}`}
-      className={`shrink-0 rounded-md object-cover shadow-sm ${className ?? ""}`}
-      loading="lazy"
-      onError={() => setFailed(true)}
-    />
-  )
-}
-
 function CopyRow({
   bookId,
   copy,
@@ -492,6 +466,9 @@ function EditBookDialog({
     handleSubmit,
     control,
     reset,
+    getValues,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<BookUpdateFormValues>({
     resolver: zodResolver(bookUpdateSchema) as Resolver<BookUpdateFormValues>,
@@ -503,6 +480,21 @@ function EditBookDialog({
       reset(initial)
     }
   }, [open, initial, reset])
+
+  function applyAiSuggestions(s: BookAiEnrichSuggestions) {
+    if (s.title?.trim()) setValue("title", s.title.trim())
+    if (s.author?.trim()) setValue("author", s.author.trim())
+    if (s.isbn !== undefined && s.isbn !== null)
+      setValue("isbn", typeof s.isbn === "string" ? s.isbn : String(s.isbn))
+    if (s.description !== undefined && s.description !== null)
+      setValue("description", s.description)
+    if (s.genre !== undefined && s.genre !== null)
+      setValue("genre", s.genre)
+    if (s.published_year !== undefined && s.published_year !== null)
+      setValue("published_year", s.published_year)
+    if (s.image_url !== undefined && s.image_url !== null)
+      setValue("image_url", s.image_url)
+  }
 
   function onValid(data: BookUpdateFormValues) {
     const payload = {
@@ -517,6 +509,10 @@ function EditBookDialog({
     update.mutate(payload, { onSuccess: () => onOpenChange(false) })
   }
 
+  const previewUrl = watch("image_url")?.trim() || null
+  const previewTitle =
+    String(watch("title") ?? initial.title).trim() || "Book"
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
@@ -525,6 +521,25 @@ function EditBookDialog({
             <DialogTitle>Edit book</DialogTitle>
             <DialogDescription>Update catalog fields.</DialogDescription>
           </DialogHeader>
+          <BookAiSuggestButton
+            title={String(watch("title") ?? initial.title)}
+            author={String(watch("author") ?? initial.author)}
+            isbn={String(watch("isbn") ?? "")}
+            buildRequest={() => {
+              const v = getValues()
+              return {
+                title: (v.title ?? initial.title).trim(),
+                author: (v.author ?? initial.author).trim(),
+                isbn: v.isbn?.trim() || undefined,
+                description: v.description?.trim() || undefined,
+                published_year: v.published_year ?? undefined,
+                genre: v.genre?.trim() || undefined,
+                image_url: v.image_url?.trim() || undefined,
+                exclude_book_id: bookId,
+              }
+            }}
+            onApply={applyAiSuggestions}
+          />
           <div className="grid gap-4 py-4">
             {update.isError ? (
               <Alert variant="destructive">
@@ -599,6 +614,15 @@ function EditBookDialog({
                   {errors.image_url.message}
                 </p>
               ) : null}
+              <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-start sm:gap-4">
+                <p className="text-muted-foreground shrink-0 text-sm">Preview</p>
+                <CoverUrlPreview
+                  key={previewUrl ?? ""}
+                  url={previewUrl}
+                  title={previewTitle}
+                  className="size-28 sm:size-32"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-desc">Description</Label>

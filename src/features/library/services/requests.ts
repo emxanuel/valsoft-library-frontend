@@ -1,5 +1,7 @@
 import { api } from "@/features/shared/services/client"
 import type {
+  BookAiEnrichRequest,
+  BookAiEnrichResponse,
   BookCopyCreate,
   BookCopyListResponse,
   BookCopyRead,
@@ -87,6 +89,16 @@ export async function deleteClient(clientId: number): Promise<void> {
 
 export async function createBook(payload: BookCreate): Promise<BookRead> {
   const { data } = await api.post<BookRead>("/library/books", payload)
+  return data
+}
+
+export async function enrichBook(
+  payload: BookAiEnrichRequest,
+): Promise<BookAiEnrichResponse> {
+  const { data } = await api.post<BookAiEnrichResponse>(
+    "/library/books/ai/enrich",
+    payload,
+  )
   return data
 }
 
