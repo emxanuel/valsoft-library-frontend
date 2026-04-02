@@ -55,7 +55,6 @@ function loanStats(loans: { due_at: string | null }[]) {
 
 export function LoansPage() {
   const isAdmin = useAuthStore((s) => s.user?.role === "admin")
-  const currentUserId = useAuthStore((s) => s.user?.id)
 
   const [searchParams, setSearchParams] = useSearchParams()
   const page = parsePositiveInt(searchParams.get("page"), 1)
@@ -202,7 +201,7 @@ export function LoansPage() {
           </CardTitle>
           <CardDescription>
             {isAdmin
-              ? "Newest checkouts first. Use check in only for loans you checked out."
+              ? "Newest checkouts first. Admins can check in any open loan; staff can check in their own checkouts."
               : "Full list with checkout and due times."}
           </CardDescription>
         </CardHeader>
@@ -283,14 +282,7 @@ export function LoansPage() {
                           {loan.due_at ? formatLoanDate(loan.due_at) : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          {currentUserId !== undefined &&
-                          loan.staff_user_id === currentUserId ? (
-                            <LoanCheckInButton loanId={loan.loan_id} />
-                          ) : (
-                            <span className="text-muted-foreground text-xs">
-                              Only assigning staff can check in here.
-                            </span>
-                          )}
+                          <LoanCheckInButton loanId={loan.loan_id} />
                         </TableCell>
                       </TableRow>
                     ))

@@ -176,40 +176,45 @@ export function StaffListPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    items.map((row) => (
-                      <TableRow key={row.id}>
-                        <TableCell>
-                          {row.first_name} {row.last_name}
-                        </TableCell>
-                        <TableCell>{row.email}</TableCell>
-                        <TableCell className="capitalize">{row.role}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {formatDate(row.updated_at)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Edit ${row.email}`}
-                              onClick={() => setEditStaff(row)}
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Remove ${row.email}`}
-                              onClick={() => setDeleteStaff(row)}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    items.map((row) => {
+                      const isCurrentUser = row.id === user.id
+                      return (
+                        <TableRow key={row.id}>
+                          <TableCell>
+                            {row.first_name} {row.last_name}
+                          </TableCell>
+                          <TableCell>{row.email}</TableCell>
+                          <TableCell className="capitalize">{row.role}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {formatDate(row.updated_at)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Edit ${row.email}`}
+                                onClick={() => setEditStaff(row)}
+                              >
+                                <Pencil className="size-4" />
+                              </Button>
+                              {!isCurrentUser ? (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Remove ${row.email}`}
+                                  onClick={() => setDeleteStaff(row)}
+                                >
+                                  <Trash2 className="size-4" />
+                                </Button>
+                              ) : null}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
                   )}
                 </TableBody>
               </Table>
