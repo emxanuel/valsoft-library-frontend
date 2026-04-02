@@ -33,6 +33,10 @@ export default defineConfig(({ mode }) => {
           target: proxyTarget,
           changeOrigin: true,
         },
+        "/admin": {
+          target: proxyTarget,
+          changeOrigin: true,
+        },
       },
     },
   };

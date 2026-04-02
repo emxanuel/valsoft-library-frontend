@@ -38,7 +38,8 @@ This document helps humans and coding agents work on the **valsoft-library-front
 The UI targets the FastAPI app in **valsoft-library-backend**:
 
 - **Auth** (cookie `session_id`): `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout`
-- **Library** (requires login): `GET /library/books`, `GET /library/loans`, `GET /library/clients` (paginated list), `POST /library/books`, `GET/PATCH/DELETE /library/books/{id}`, `POST /library/clients`, `GET/PATCH/DELETE /library/clients/{id}`, `POST .../checkout` (body includes `client` + optional `due_at`), `POST .../checkin`
+- **Library** (requires login; **admin** and **employee**): `GET /library/books`, `GET /library/loans`, `GET /library/clients` (paginated list), `POST /library/books`, `GET/PATCH/DELETE /library/books/{id}`, `POST /library/clients`, `GET/PATCH/DELETE /library/clients/{id}`, `POST .../checkout` (body includes `client` + optional `due_at`), `POST .../checkin`
+- **Admin** (**admin** only): `GET/POST /admin/employees`, `GET/PATCH/DELETE /admin/employees/{id}`
 
 See the backend [`AGENTS.md`](../valsoft-library-backend/AGENTS.md) for behavior (soft delete, loans, etc.).
 
@@ -57,7 +58,7 @@ See the backend [`AGENTS.md`](../valsoft-library-backend/AGENTS.md) for behavior
 
    Default dev URL: `http://localhost:3010` (see [`vite.config.ts`](vite.config.ts)).
 
-4. **Proxy**: [`vite.config.ts`](vite.config.ts) proxies `/auth` and `/library` to `VITE_PROXY_TARGET` or `http://127.0.0.1:8000`. Override with env if your API runs elsewhere.
+4. **Proxy**: [`vite.config.ts`](vite.config.ts) proxies `/auth`, `/library`, and `/admin` to `VITE_PROXY_TARGET` or `http://127.0.0.1:8000`. Override with env if your API runs elsewhere.
 
 ### Session cookies on HTTP
 

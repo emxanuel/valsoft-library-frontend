@@ -1,7 +1,11 @@
+export type UserRole = "admin" | "employee"
+
 export type UserRead = {
+  id: number
   first_name: string
   last_name: string
   email: string
+  role: UserRole
   created_at: string
   updated_at: string
 }

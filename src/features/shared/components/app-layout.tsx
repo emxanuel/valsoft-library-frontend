@@ -28,15 +28,22 @@ function documentTitleForAppPath(pathname: string): string {
   if (pathname === "/library/loans") return `Open loans | ${APP_NAME}`
   if (pathname === "/library/clients") return `Clients | ${APP_NAME}`
   if (/^\/library\/books\/[^/]+$/.test(pathname)) return `Book | ${APP_NAME}`
+  if (pathname === "/admin/employees") return `Staff | ${APP_NAME}`
   return APP_NAME
 }
 
-const navItems = [
+const libraryNavItems = [
   { to: "/library", label: "Overview", end: true },
   { to: "/library/books", label: "Books", end: false },
   { to: "/library/loans", label: "Loans", end: false },
   { to: "/library/clients", label: "Clients", end: false },
 ] as const
+
+const adminNavItem = {
+  to: "/admin/employees",
+  label: "Staff",
+  end: false,
+} as const
 
 function navLinkClassName({
   isActive,
@@ -99,9 +106,10 @@ function SidebarNav({
   onNavigate?: () => void
   className?: string
 }) {
+  const isAdmin = useAuthStore((s) => s.user?.role === "admin")
   return (
     <nav className={cn("flex flex-col gap-0.5", className)}>
-      {navItems.map((item) => (
+      {libraryNavItems.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
@@ -112,6 +120,16 @@ function SidebarNav({
           {item.label}
         </NavLink>
       ))}
+      {isAdmin ? (
+        <NavLink
+          to={adminNavItem.to}
+          end={adminNavItem.end}
+          className={navLinkClassName}
+          onClick={onNavigate}
+        >
+          {adminNavItem.label}
+        </NavLink>
+      ) : null}
     </nav>
   )
 }
