@@ -1,75 +1,35 @@
-# React + TypeScript + Vite
+# Valsoft Library — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript UI for the library app.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js (LTS)
+- pnpm (`corepack enable` or `npm i -g pnpm`)
 
-## React Compiler
+## Run locally
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+1. Start the API (default `http://127.0.0.1:8000`) — see the backend repo `README.md`.
 
-Note: This will impact Vite dev & build performances.
+2. Copy [`.env.example`](.env.example) to `.env`. Leave **`VITE_API_BASE_URL`** empty so Vite proxies `/auth`, `/library`, and `/admin` to the API (session cookies on one origin).
 
-## Expanding the ESLint configuration
+3. Install and dev server:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+   ```bash
+   pnpm install
+   pnpm dev
+   ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+   App: **`http://localhost:3011`** (see [`vite.config.ts`](vite.config.ts)); proxy target defaults to `http://127.0.0.1:8000`.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Production build
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Set **`VITE_API_BASE_URL`** to your API’s public URL. For the AI WebSocket stream, set **`VITE_API_BASE_URL_WS`** if needed ([`src/config.ts`](src/config.ts)).
+
+```bash
+pnpm build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Output in `dist/`. `pnpm lint` runs ESLint.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Design notes: `../valsoft-library-backend/ARCHITECTURE.md`. Contributor details: [AGENTS.md](AGENTS.md).

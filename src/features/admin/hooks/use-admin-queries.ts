@@ -5,10 +5,24 @@ import * as adminRequests from "@/features/admin/services/requests"
 import { authKeys } from "@/features/auth/query-keys"
 import { useAuthStore } from "@/features/auth/stores/auth-store"
 import type {
+  AdminOpenLoansPage,
   EmployeeCreatePayload,
   EmployeeUpdatePayload,
+  ListAdminOpenLoansParams,
   ListStaffParams,
 } from "@/features/admin/services/types"
+
+export function useAdminOpenLoansQuery(
+  params: ListAdminOpenLoansParams,
+  enabled = true,
+) {
+  return useQuery<AdminOpenLoansPage>({
+    queryKey: adminKeys.openLoans(params),
+    queryFn: () => adminRequests.listAdminOpenLoans(params),
+    staleTime: 0,
+    enabled,
+  })
+}
 
 export function useStaffListQuery(params: ListStaffParams) {
   return useQuery({

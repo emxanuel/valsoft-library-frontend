@@ -1,12 +1,23 @@
 import { api } from "@/features/shared/services/client"
 
 import type {
+  AdminOpenLoansPage,
   EmployeeCreatePayload,
   EmployeeUpdatePayload,
+  ListAdminOpenLoansParams,
   ListStaffParams,
   StaffListPage,
   StaffRead,
 } from "./types"
+
+export async function listAdminOpenLoans(
+  params?: ListAdminOpenLoansParams,
+): Promise<AdminOpenLoansPage> {
+  const { data } = await api.get<AdminOpenLoansPage>("/admin/loans", {
+    params,
+  })
+  return data
+}
 
 export async function listStaff(
   params: ListStaffParams,

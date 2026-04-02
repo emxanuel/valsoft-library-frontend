@@ -1,17 +1,17 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router"
 
-import { LoginPage } from "@/features/auth/pages/login-page"
-import { ProtectedLayout } from "@/features/auth/pages/protected-layout"
-import { RegisterPage } from "@/features/auth/pages/register-page"
 import { AppLayout } from "@/features/shared/components/app-layout"
-import { BookDetailPage } from "@/features/library/pages/book-detail-page"
-import { BooksListPage } from "@/features/library/pages/books-list-page"
-import { ClientDetailPage } from "@/features/library/pages/client-detail-page"
-import { ClientsListPage } from "@/features/library/pages/clients-list-page"
-import { LoanHistoryPage } from "@/features/library/pages/loan-history-page"
-import { StaffListPage } from "@/features/admin/pages/staff-list-page"
-import { LibraryHomePage } from "@/features/library/pages/library-home-page"
-import { LoansPage } from "@/features/library/pages/loans-page"
+import { StaffListPage } from "@/pages/admin/staff-list-page"
+import { LoginPage } from "@/pages/auth/login-page"
+import { ProtectedLayout } from "@/pages/auth/protected-layout"
+import { RegisterPage } from "@/pages/auth/register-page"
+import { BookDetailPage } from "@/pages/books/book-detail-page"
+import { BooksListPage } from "@/pages/books/books-list-page"
+import { ClientDetailPage } from "@/pages/clients/client-detail-page"
+import { ClientsListPage } from "@/pages/clients/clients-list-page"
+import { LibraryHomePage } from "@/pages/library-home-page"
+import { LoanHistoryPage } from "@/pages/loans/loan-history-page"
+import { LoansPage } from "@/pages/loans/loans-page"
 
 export const Router = () => {
   return (

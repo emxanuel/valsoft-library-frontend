@@ -45,7 +45,7 @@ export function LoginForm() {
         : null
 
   return (
-    <Card className="border-border/70 bg-card/95 w-full rounded-2xl shadow-xl shadow-primary/[0.06] backdrop-blur-sm">
+    <Card className="border-border/70 bg-card/95 w-full rounded-2xl shadow-xl shadow-primary/6 backdrop-blur-sm">
       <CardHeader className="space-y-1 pb-2">
         <CardTitle className="font-heading text-2xl font-semibold tracking-tight">
           Sign in

@@ -24,7 +24,7 @@ This document helps humans and coding agents work on the **valsoft-library-front
 | [`src/features/<feature>/components/`](src/features/auth/components/) | Feature UI composition |
 | [`src/features/<feature>/hooks/`](src/features/auth/hooks/) | TanStack Query hooks, feature helpers |
 | [`src/features/<feature>/stores/`](src/features/auth/stores/auth-store.ts) | Zustand stores when needed |
-| [`src/features/<feature>/pages/`](src/features/auth/pages/) | Route-level screens |
+| [`src/pages/`](src/pages/) | Route-level screens (imported by [`src/router/index.tsx`](src/router/index.tsx)) |
 | [`src/router/`](src/router/index.tsx) | `BrowserRouter`, public vs protected routes |
 | [`src/features/shared/components/ui/`](src/features/shared/components/ui/) | shadcn primitives (Button, Input, Card, Dialog, …) |
 
@@ -73,11 +73,11 @@ pnpm lint     # eslint
 
 ## State management
 
-- **TanStack Query**: books list/detail, auth `GET /auth/me`, and all mutations (login, register, logout, book CRUD, checkout/checkin). Use query keys from [`auth/query-keys.ts`](src/features/auth/query-keys.ts) and [`library/query-keys.ts`](src/features/library/query-keys.ts).
+- **TanStack Query**: books list/detail, auth `GET /auth/me`, and all mutations (login, register, logout, book CRUD, checkout/checkin). Use query keys from [`auth/query-keys.ts`](src/features/auth/query-keys.ts), [`books/query-keys.ts`](src/features/books/query-keys.ts), [`loans/query-keys.ts`](src/features/loans/query-keys.ts), [`clients/query-keys.ts`](src/features/clients/query-keys.ts), and [`admin/query-keys.ts`](src/features/admin/query-keys.ts).
 - **Zustand** ([`auth-store.ts`](src/features/auth/stores/auth-store.ts)): mirrors the logged-in user and status for layouts and menus; cleared on logout.
 
 ## When you change something
 
 - New API fields: update the relevant `services/types.ts` and `requests.ts`, then forms/schemas and UI.
-- New routes: add pages under `features/*/pages/`, wire in [`src/router/index.tsx`](src/router/index.tsx), and extend this file if behavior is non-obvious.
+- New routes: add pages under [`src/pages/`](src/pages/), wire in [`src/router/index.tsx`](src/router/index.tsx), and extend this file if behavior is non-obvious.
 - New shared UI: add under `features/shared/components/ui/` (shadcn) or `features/shared/components/` for one-off layout.
